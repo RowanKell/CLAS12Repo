@@ -1,0 +1,5 @@
+Filename	example.out
+IsMC		0
+Q2min		1.0
+Wmin		2.0
+ymax		0.8
