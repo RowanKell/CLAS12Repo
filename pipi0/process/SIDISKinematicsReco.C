@@ -21,7 +21,9 @@
 // 
 // ----------------------------
 
-#include "SIDSKinematicsReco.h"
+#include "SIDISKinematicsReco.h"
+
+using namespace std;
 
 SIDISKinematicsReco::SIDISKinematicsReco(std::string cutcardname):
   _ievent(0),
@@ -42,17 +44,17 @@ int SIDISKinematicsReco::Init()
   // Open settings from CutCard
   // -------------------------
   
-  if(!_settings.readCard(cutcardname)){
+  if(!_settings.readCard(_cutcardname.c_str())){
     return -1;
   }
   else{
-    settings.loadSettings();
+    _settings.loadSettings();
   }
 
   // Create TFile
   // -------------------------
 
-  _tfile = new TFile(_settings.Filename(),"RECREATE");
+  _tfile = new TFile(_settings.Filename().c_str(),"RECREATE");
 
   // Create event variable map 
   // -------------------------  
@@ -70,10 +72,11 @@ int SIDISKinematicsReco::Init()
   
   // Create particle map 
   // -------------------------  
-  _map_particle.insert( make_pair( SIDISParticle::id , vdummy) );
-  _map_particle.insert( make_pair( SIDISParticle::Pt , vdummy) );
-  _map_particle.insert( make_pair( SIDISParticle::Pz , vdummy) );
-  _map_particle.insert( make_pair( SIDISParticle::E , vdummy) );
+  //  _map_particle.insert(make_pair( 10 , dummy) );
+  // _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_pid , vdummy) );
+  // _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_pt , vdummy) );
+  // _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_pz , vdummy) );
+  // _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_E , vdummy) );
    
   // Create Monte Carlo TTree
   // -------------------------
@@ -85,7 +88,7 @@ int SIDISKinematicsReco::Init()
   // -------------------------
   for(map< string , double >::iterator it = _map_event.begin(); it!= _map_event.end(); ++it)
     {
-      _tree_MC->Branch( (it->first).c_str() , &(iter->second) );
+      _tree_MC->Branch( (it->first).c_str() , &(it->second) );
     }
   
   // Add Particle Branches
@@ -114,21 +117,25 @@ int SIDISKinematicsReco::process_event()
   if(_do_MC)
     {
       // Using the particle's Pz as a key (should be unique for each reco particle, but could be wrong)
-      type_map_part = particleMap;
+      type_map_part particleMap;
       
       /* Add particle information */
-      CollectParticlesFromTruth( particleMap );
+      //      CollectParticlesFromTruth( particleMap );
 
       /* Write particle information to Tree */
       WriteParticlesToTree( particleMap );
       
       /* Add event information */
-      AddTruthEventInfo();
+      //      AddTruthEventInfo();
       
       /* Fill MC tree */
       _tree_MC->Fill();
     }
   
+  /* Increase event # */
+  _ievent++;
+
+  return 0;
 }
 
 int SIDISKinematicsReco::WriteParticlesToTree( type_map_part& particleMap )
@@ -140,11 +147,11 @@ int SIDISKinematicsReco::WriteParticlesToTree( type_map_part& particleMap )
   for (type_map_part::iterator it = particleMap.begin(); it!= particleMap.end(); ++it)
     {
       
-      for (map< SIDISParticle::PROPERTY , std::vector<double> >::iterator it_prop = _map_particle.begin(); it_prop!= _map_particle.end(); ++it_prop)
+      /*for (map< SIDISParticle::PROPERTY , std::vector<double> >::iterator it_prop = _map_particle.begin(); it_prop!= _map_particle.end(); ++it_prop)
 	{
 	  // Not confident about this section
-	  (it_prop->second).push_back( (it->second) ); 
-	}
+	  //(it_prop->second).push_back( (it->second) ); 
+	  }*/
     }
   
   return 0;
@@ -179,7 +186,7 @@ void SIDISKinematicsReco::ResetBranchMap()
 
 
 
-
+/*
 //int SIDISKinematicsReco(int argc, char *argv[])
 int SIDISKinematicsReco(char *argv)
 {
@@ -245,5 +252,5 @@ int SIDISKinematicsReco(char *argv)
 
   return 0;
 }
-
+*/
 

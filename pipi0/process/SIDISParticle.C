@@ -9,19 +9,19 @@ std::pair<const std::string, SIDISParticle::PROPERTY_TYPE> SIDISParticle::get_pr
       // ---------------
 
     case part_pid:
-      return make_pair("pid", SIDISParticle::type_int);
+      return std::make_pair("pid", SIDISParticle::type_int);
     case part_pt:
-      return make_pair("pt", SIDISParticle::type_double);
+      return std::make_pair("pt", SIDISParticle::type_double);
     case part_pz:
-      return make_pair("pz", SIDISParticle::type_double);
+      return std::make_pair("pz", SIDISParticle::type_double);
     case part_E:
-      return make_pair("E", SIDISParticle::type_double);
+      return std::make_pair("E", SIDISParticle::type_double);
 
       // ----------------
       
     default:
-      std::cout << "SIDISParticle::get_property_info - Fatal Error - unknown prop_id " << prop_id << endl;
-      exit(1);
+      std::cout << "SIDISParticle::get_property_info - Fatal Error - unknown prop_id " << prop_id << std::endl;
+      return std::make_pair("-1", SIDISParticle::type_int);
     }
 }
 

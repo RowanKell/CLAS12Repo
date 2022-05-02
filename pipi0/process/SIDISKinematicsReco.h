@@ -4,13 +4,18 @@
 /* STL Includes */
 #include <math.h>
 #include <map>
-
+#include <utility>
 /* Src Includes */
 #include "Settings.h"
 #include "Constants.h"
 #include "Kinematics.h"
 #include "SIDISParticle.h"
 
+#include <TFile.h>
+#include <TTree.h>
+
+//class TFile;
+//class TTree;
 class SIDISParticle;
 
 typedef std::map<double, SIDISParticle*> type_map_part;

@@ -1,7 +1,10 @@
 #ifndef SIDISParticle_h
 #define SIDISParticle_h
 
-class SIDISParticle:
+#include <utility>
+#include <iostream>
+
+class SIDISParticle
 {
  public: 
   SIDISParticle(){}
@@ -14,22 +17,23 @@ class SIDISParticle:
   {//
     
     // -- 1-10   Generic Information -- //
-    part_nParticle   = 1;
-    part_nPhoton   = 1;
+    part_nParticle   = 1,
+    part_nPhoton   = 2,
     // -- 10-100 Particle Kinematics and Identification -- //
-    part_pid = 10;
-    part_pt  = 11;
-    part_pz  = 12;
-    part_E   = 13;
+    part_pid = 10,
+    part_pt  = 11,
+    part_pz  = 12,
+    part_E   = 13
     
   };
 
   enum PROPERTY_TYPE
   {//
-    type_int = 1;
-    type_double = 2;
+    type_int = 1,
+    type_double = 2
   };
 
   static std::pair<const std::string,PROPERTY_TYPE> get_property_info(PROPERTY prop_id);
+
 };
 #endif
