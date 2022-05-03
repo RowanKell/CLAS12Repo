@@ -17,7 +17,7 @@ AM_LDFLAGS = \
   -L$(HIPO)/lib \
   -L$(libdir)
 
-libdihadronana_la_LIBADD = \
+libclas12ana_la_LIBADD = \
   -lClas12Banks \
   -lClas12Root \
   -lHipo4 \
@@ -30,7 +30,7 @@ pkginclude_HEADERS = \
   ../src/SIDISParticle.h \
   ../src/Constants.h
 
-libdihadronana_la_SOURCES = \
+libclas12ana_la_SOURCES = \
   ../src/Kinematics.C \
   ../src/Settings.C \
   ../src/SIDISKinematicsReco.C \
