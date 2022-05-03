@@ -5,17 +5,17 @@ AM_CPPFLAGS = \
   -I$(ROOTSYS)/include \
   -I$(CLAS12ROOT)/hipo4 \
   -I$(CLAS12ROOT)/Clas12Banks \
-  -I$(CLAS12ROOT)/Clas12Root
+  -I$(CLAS12ROOT)/Clas12Root 
 
 lib_LTLIBRARIES = \
    libdihadronana.la
 
-AM_CXXFLAGS = -Wall -Werror -msse2 -std=c++11
+AM_CXXFLAGS = -Wall -Werror -msse2 -std=c++14
 
 AM_LDFLAGS = \
-  -L$(libdir) \
   -L$(CLAS12ROOT)/lib \
-  -L$(HIPO)/lib
+  -L$(HIPO)/lib \
+  -L$(libdir)
 
 libdihadronana_la_LIBADD = \
   -lClas12Banks \
