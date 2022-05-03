@@ -2,7 +2,6 @@
 srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
 
-#(cd $srcdir; aclocal -I ${OFFLINE_MAIN}/share;\
-(cd $srcdir; \
+(cd $srcdir; aclocal; \
 libtoolize --force; automake -a --add-missing; autoconf)
 $srcdir/configure  "$@"

@@ -5,17 +5,17 @@ AM_CPPFLAGS = \
   -I$(ROOTSYS)/include \
   -I$(CLAS12ROOT)/hipo4 \
   -I$(CLAS12ROOT)/Clas12Banks \
-  -I$(CLAS12ROOT)/Clas12Root
+  -I$(CLAS12ROOT)/Clas12Root 
 
 lib_LTLIBRARIES = \
-   libdihadronana.la
+   libclas12ana.la
 
-AM_CXXFLAGS = -Wall -Werror -msse2
+AM_CXXFLAGS = -Wall -Werror -msse2 -std=c++14
 
 AM_LDFLAGS = \
-  -L$(libdir) \
   -L$(CLAS12ROOT)/lib \
-  -L$(HIPO)/lib
+  -L$(HIPO)/lib \
+  -L$(libdir)
 
 libdihadronana_la_LIBADD = \
   -lClas12Banks \
@@ -24,19 +24,22 @@ libdihadronana_la_LIBADD = \
   -llz4
 
 pkginclude_HEADERS = \
-  Kinematics.h \
-  Settings.h \
-  SIDISKinematicsReco.h
+  ../src/Kinematics.h \
+  ../src/Settings.h \
+  ../src/SIDISKinematicsReco.h \
+  ../src/SIDISParticle.h \
+  ../src/Constants.h
 
 libdihadronana_la_SOURCES = \
-  Kinematics.C \
-  Settings.C \
-  SIDISKinematicsReco.C
+  ../src/Kinematics.C \
+  ../src/Settings.C \
+  ../src/SIDISKinematicsReco.C \
+  ../src/SIDISParticle.C
 
-%_Dict.C: %.h %LinkDef.h
-	rootcint -f -std=c++11 $@ @CINTDEFS@ -c $(DEFAULT_INCLUDES) $(AM_CPPFLAGS) $^
+%_Dict.C: ../src/%.h ../src/%LinkDef.h
+	rootcint -f $@ @CINTDEFS@ -c $(DEFAULT_INCLUDES) $(AM_CPPFLAGS) $^
 
-%_Dict_rdict.pcm: %_Dict.C ;
+%_Dict_rdict.pcm: ../src/%_Dict.C ;
 
 ################################################
 # linking tests
@@ -47,7 +50,7 @@ BUILT_SOURCES = \
   testexternals.c
 
 testexternals_LDADD = \
-  libdihadronana.la
+  libclas12ana.la
 
 testexternals.c:
 	echo "//*** this is a generated file. Do not commit, do not edit" > $@

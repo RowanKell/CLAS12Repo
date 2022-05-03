@@ -1,4 +1,4 @@
-AC_INIT(dihadronana,[1.00])
+AC_INIT(clas12ana,[1.00])
 AC_CONFIG_SRCDIR([configure.ac])
 AM_INIT_AUTOMAKE
 
