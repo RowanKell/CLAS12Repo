@@ -25,41 +25,29 @@
 
 using namespace std;
 
-SIDISKinematicsReco::SIDISKinematicsReco(std::string cutcardname):
+SIDISKinematicsReco::SIDISKinematicsReco(std::string outfilename):
   _ievent(0),
-  _cutcardname(cutcardname),
   _tfile(nullptr),
   _tree_MC(nullptr),
   _tree_Reco(nullptr),
-  _electron_beam_energy(12),
-  _do_MC(false),
-  _do_Reco(true)
+  _electron_beam_energy(12)
 {
-
+  _outfilename = outfilename;
+  cout << "Initialized SIDISKinematicsReco" << endl;
 }
 
 int SIDISKinematicsReco::Init()
 {
 
-  // Open settings from CutCard
-  // -------------------------
-  
-  if(!_settings.readCard(_cutcardname.c_str())){
-    return -1;
-  }
-  else{
-    _settings.loadSettings();
-  }
-
   // Create TFile
   // -------------------------
 
-  _tfile = new TFile(_settings.Filename().c_str(),"RECREATE");
+  _tfile = new TFile(_outfilename.c_str(),"RECREATE");
 
   // Create event variable map 
   // -------------------------  
   double dummy = 0;
-  std::vector<float> vdummy;
+  std::vector<double> vdummy;
 
   _map_event.insert( make_pair( "nParticles" , dummy ) );
   _map_event.insert( make_pair( "nPhotons" , dummy ) );
@@ -72,11 +60,10 @@ int SIDISKinematicsReco::Init()
   
   // Create particle map 
   // -------------------------  
-  //  _map_particle.insert(make_pair( 10 , dummy) );
-  // _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_pid , vdummy) );
-  // _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_pt , vdummy) );
-  // _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_pz , vdummy) );
-  // _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_E , vdummy) );
+  _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_pid , vdummy) );
+  _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_pt , vdummy) );
+  _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_pz , vdummy) );
+  _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_E , vdummy) );
    
   // Create Monte Carlo TTree
   // -------------------------
@@ -97,7 +84,7 @@ int SIDISKinematicsReco::Init()
     {
       _tree_MC->Branch( SIDISParticle::get_property_info( (it->first) ).first.c_str(), &(it->second));
     }
-
+ 
   // Create Reconstructed TTree
   // as Monte Carlo copy
   // -------------------------
@@ -110,20 +97,20 @@ int SIDISKinematicsReco::Init()
 
 int SIDISKinematicsReco::process_event()
 {
-  // Reset the branch map
-  ResetBranchMap();
-
   // Parse through true Monte Carlo data
-  if(_do_MC)
+  if(_settings.doMC())
     {
-      // Using the particle's Pz as a key (should be unique for each reco particle, but could be wrong)
+      // Reset the branch map
+      ResetBranchMap();
+
+      // Using the particle's pindex as a key (should be unique for each reco particle, but could be wrong)
       type_map_part particleMap;
       
       /* Add particle information */
       //      CollectParticlesFromTruth( particleMap );
 
       /* Write particle information to Tree */
-      WriteParticlesToTree( particleMap );
+      //WriteParticlesToTree( particleMap );
       
       /* Add event information */
       //      AddTruthEventInfo();
@@ -147,11 +134,11 @@ int SIDISKinematicsReco::WriteParticlesToTree( type_map_part& particleMap )
   for (type_map_part::iterator it = particleMap.begin(); it!= particleMap.end(); ++it)
     {
       
-      /*for (map< SIDISParticle::PROPERTY , std::vector<double> >::iterator it_prop = _map_particle.begin(); it_prop!= _map_particle.end(); ++it_prop)
+      for (map< SIDISParticle::PROPERTY , std::vector<double> >::iterator it_prop = _map_particle.begin(); it_prop!= _map_particle.end(); ++it_prop)
 	{
 	  // Not confident about this section
 	  //(it_prop->second).push_back( (it->second) ); 
-	  }*/
+	}
     }
   
   return 0;
@@ -163,7 +150,7 @@ void SIDISKinematicsReco::ResetBranchMap()
     {
       (it->second) = NAN;
     } 
-  
+ 
   // Particle branch
   for(map<SIDISParticle::PROPERTY , std::vector<double>>::iterator it = _map_particle.begin(); it!=_map_particle.end(); ++it)
     {
@@ -173,7 +160,20 @@ void SIDISKinematicsReco::ResetBranchMap()
   return;
 }
 
+int SIDISKinematicsReco::End()
+{
+  _tfile->cd();
+  
+  if(_settings.doMC())
+    _tree_MC->Write();
+  
+  if(_settings.doReco())
+    _tree_Reco->Write();
 
+  _tfile->Close();
+  
+  return 0;
+}
 
 
 

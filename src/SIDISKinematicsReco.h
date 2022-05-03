@@ -18,15 +18,19 @@
 //class TTree;
 class SIDISParticle;
 
-typedef std::map<double, SIDISParticle*> type_map_part;
+typedef std::map<int, SIDISParticle*> type_map_part;
 
 class SIDISKinematicsReco{
  
  public:
   
-  SIDISKinematicsReco(std::string cutcardname);
+  SIDISKinematicsReco(std::string);
 
   int Init();
+
+  void ImportSettings(Settings theSettings) {
+    _settings = theSettings;
+  }
 
   int process_event();
 
@@ -35,33 +39,22 @@ class SIDISKinematicsReco{
   void set_beam(double E){
     _electron_beam_energy = E;
   }
-  
-  void set_do_MC(bool select){
-    _do_MC = select;
-  }
-
-  void set_do_Reco(bool select){
-    _do_Reco = select;
-  }
-
+ 
  private:
  
   int _ievent;
-  std::string _cutcardname;
   Settings _settings;
   Kinematics _kin;
-  
+
+  std::string _outfilename="";
   TFile *_tfile;
   TTree *_tree_MC;
   TTree *_tree_Reco;
 
   double _electron_beam_energy;
 
-  bool _do_MC;
-  bool _do_Reco;
-
   std::map<std::string, double> _map_event;
-  std::map< SIDISParticle::PROPERTY , std::vector<double>> _map_particle;
+  std::map<SIDISParticle::PROPERTY,std::vector<double>> _map_particle;
 
   /* Get true particle info from HIPO Bank */
   int CollectParticlesFromTruth( type_map_part& );

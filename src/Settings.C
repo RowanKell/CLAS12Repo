@@ -7,94 +7,79 @@ Settings::Settings()
   
 }
 
-bool Settings::readCard(const char *file)
-{
-  if(!file)
-    return false;
-  _cardname = string(file);
-  
-  
-  // Open the file
-  // ------------------
-  ifstream ifs(file);
-  if(!ifs){
-    cout << "Cannot open filename --> " << file << endl;
-    return false;
-  }
-  
-  // Read the file
-  // ------------------
-  while (ifs.good() && !ifs.eof()){
-    string line;
-    getline(ifs,line);
-    
-    // If the line is empty and at eof, break
-    if(ifs.eof() && line.empty()) break;
-    
-    // Skip empty lines
-    if(line.find_first_not_of(" \n\t\v\b\r\f\a") == string::npos) continue;
-    
-    // Skip lines which do not begin with a letter or digit
-    int firstChar = line.find_first_not_of(" \n\t\v\b\r\f\a");
-    if(!isalnum(line[firstChar])) continue;
-
-    // Save the useful line
-    _lines.push_back(line);
-  }
-  
-  // Close the file
-  // ------------------
-  ifs.close();
-
-  // Parse through the lines
-  // ------------------------
-  for(string l: _lines)
-    {
-      string key,val;
-      istringstream ss(l);
-      ss>>key;
-      ss>>val;
-      _settings[key] = val;
-    }
-  return true;
-}  
-
-bool Settings::loadSettings()
-{
-  for( map<string,string>::iterator it = _settings.begin(); it!=_settings.end(); it++)
-    {
-      string key = (*it).first;
-      const char *val = ((*it).second).c_str();
-
-      if(key.compare("Filename") == 0){
-	_Filename = val;
-      }else if(key.compare("IsMC") == 0){
-	_IsMC = atoi(val);
-      }else if(key.compare("Q2min") == 0){
-	_Q2min = atof(val);
-      }else if(key.compare("Wmin") == 0){
-	_Wmin  = atof(val);
-      }else if(key.compare("ymax") == 0){
-	_ymax  = atof(val);
-      }else if(key.compare("picharge") == 0){
-	string temp = string(val);
-	if(temp.compare("plus") == 0 || temp.compare("+") == 0 || temp.compare("1") == 0)
-	  _picharge = 1;
-	else if(temp.compare("minus") == 0 || temp.compare("-") == 0 || temp.compare("-1") == 0)
-	  _picharge = -1;
-	else
-	  {
-	    cout << "Pion charge error, see Settings.C for options" << endl;
-	    return false;
-	  }
-      }
-    }
-  return true;
-}
-string Settings::Filename() const{return _Filename;}
-int Settings::IsMC() const {return _IsMC;}
+bool Settings::doMC() const {return _doMC;}
+bool Settings::doReco() const {return _doReco;}
 double Settings::Q2min() const {return _Q2min;}
+double Settings::Q2max() const {return _Q2max;}
 double Settings::Wmin() const {return _Wmin;}
+double Settings::Wmax() const {return _Wmax;}
+double Settings::ymin() const {return _ymin;}
 double Settings::ymax() const {return _ymax;}
-int Settings::picharge() const {return _picharge;}
-int Settings::piPID() const {return _picharge*211;}
+
+void Settings::setdoMC(bool b){
+  _doMC = b;
+  return;
+}
+
+void Settings::setdoReco(bool b){
+  _doReco = b;
+  return;
+}
+
+void Settings::setQ2range(double Q2min, double Q2max) {
+  _Q2min = Q2min;
+  _Q2max = Q2max;
+  return;
+}
+
+void Settings::setWrange(double Wmin, double Wmax) {
+  _Wmin = Wmin;
+  _Wmax = Wmax;
+  return;
+}
+
+void Settings::setyrange(double ymin, double ymax) {
+  _ymin = ymin;
+  _ymax = ymax;
+  return;
+}
+
+void Settings::addFinalState(int pid, int n, bool exact=false) {
+  // Make sure pid isn't a duplicate
+  if(std::count(_fPID.begin(), _fPID.end(), pid)){
+    std::cout << "ERROR in Settings::addFinalState -- " << pid << " is a repeat! Skipping..." << std::endl;
+  }
+  else if(n<0)
+    {
+      std::cout << "ERROR in Settings::addFinalState -- " << "n cannot be negative! Skipping..." << std::endl;
+    }
+  else
+    {
+      _fPID.push_back(pid);
+      _fNpart.push_back(n);
+      _fExact.push_back(exact);
+    }
+  return;
+}
+  
+std::vector<int> Settings::getFinalStatePIDs() const { return _fPID; }
+
+int Settings::getN_fromPID(int pid){
+  for(unsigned int idx = 0 ; idx < _fPID.size() ; idx++)
+    {
+      if(_fPID.at(idx)==pid)
+	return _fNpart.at(idx);
+    }
+  
+  return -1;
+}
+
+bool Settings::isExact_fromPID(int pid){
+  for(unsigned int idx = 0 ; idx < _fPID.size() ; idx++)
+    {
+      if(_fPID.at(idx)==pid)
+	return _fExact.at(idx);
+    }
+  
+  return false;
+}

@@ -1,13 +1,17 @@
 #pragma once
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,00,0)
+// If anybody can figure out how to have root automically search in the include
+// directory for this file, it would be GREATLY appreciated! 
+#include "/work/clas12/users/gmat/CLAS12Analysis/include/clas12ana/SIDISKinematicsReco.h"
+#include "/work/clas12/users/gmat/CLAS12Analysis/include/clas12ana/Settings.h"
 R__LOAD_LIBRARY(libclas12ana.so)
 #endif
 
 using namespace std;
 
 int pipi0_process(
-			const char * inputFile = "/work/clas12/users/gmat/dihadron/pipi0/data/raw/",
-			const char * outputFile = "/work/clas12/users/gmat/dihadron/pipi0/data/raw/"
+			const char * inputFile = "/work/clas12/users/gmat/CLAS12Analysis/data/raw/",
+			const char * outputFile = "/work/clas12/users/gmat/CLAS12Analysis/data/raw/test.root"
 			)
 {
   //---------------
@@ -15,8 +19,37 @@ int pipi0_process(
   //---------------
   gSystem->Load("libclas12ana.so"); 
  
-  //  SIDISKinematicsReco *ana = new SIDISKinematicsReco("");
- 
-
+  //-----------------------------------
+  // Create SIDISKinematicsReco Object 
+  //-----------------------------------
+  SIDISKinematicsReco *ana = new SIDISKinematicsReco(outputFile);
+  //-----------------------------------
+  // Create Settings for Study
+  //-----------------------------------
+  Settings settings;
+  settings.setQ2range(1,100);
+  settings.setWrange(2,100);
+  settings.setyrange(0,1);
+  settings.addFinalState(11,1,true); // Exactly 1 scattered electron
+  settings.addFinalState(211,1,true); // Exactly 1 pi+
+  settings.addFinalState(22,2,false); // 2 or more gammas
+  settings.setdoMC(true);
+  settings.setdoReco(true);
+  //-----------------------------------
+  // Import Settings into Processing Framework
+  //-----------------------------------
+  ana->ImportSettings(settings);
+  //-----------------------------------
+  // Initialize the Analysis Module
+  //-----------------------------------
+  ana->Init();
+  //-----------------------------------
+  // Process an event
+  //-----------------------------------
+  ana->process_event();
+  //-----------------------------------
+  // End processing
+  //-----------------------------------
+  ana->End();
   return 0;
 }
