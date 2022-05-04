@@ -1,16 +1,16 @@
 AUTOMAKE_OPTIONS = foreign
 
 AM_CPPFLAGS = \
-  -I$(includedir) \
-  -I$(ROOTSYS)/include \
   -I$(CLAS12ROOT)/hipo4 \
   -I$(CLAS12ROOT)/Clas12Banks \
-  -I$(CLAS12ROOT)/Clas12Root 
+  -I$(CLAS12ROOT)/Clas12Root \
+  -I$(ROOTSYS)/include \
+  -I$(includedir) 
 
 lib_LTLIBRARIES = \
    libclas12ana.la
 
-AM_CXXFLAGS = -Wall -Werror -msse2 -std=c++14
+AM_CXXFLAGS = -Wall -Werror -Wno-int-in-bool-context -msse2 -std=c++14
 
 AM_LDFLAGS = \
   -L$(CLAS12ROOT)/lib \
@@ -37,7 +37,8 @@ libclas12ana_la_SOURCES = \
   ../src/SIDISParticle.C
 
 %_Dict.C: ../src/%.h ../src/%LinkDef.h
-	rootcint -f $@ @CINTDEFS@ -c $(DEFAULT_INCLUDES) $(AM_CPPFLAGS) $^
+	rootcint -f $@ @CINTDEFS@ -c $(AM_CPPFLAGS) $^
+#	rootcint -f $@ @CINTDEFS@ -c $(DEFAULT_INCLUDES) $(AM_CPPFLAGS) $^	
 
 %_Dict_rdict.pcm: ../src/%_Dict.C ;
 
