@@ -10,6 +10,7 @@
 #include "Constants.h"
 #include "Kinematics.h"
 #include "SIDISParticle.h"
+#include "SIDISParticlev1.h"
 /* ROOT includes */
 #include <TFile.h>
 #include <TTree.h>
@@ -57,8 +58,8 @@ class SIDISKinematicsReco{
 
   double _electron_beam_energy;
 
-  std::map<std::string, double> _map_event;
-  std::map<SIDISParticle::PROPERTY,std::vector<double>> _map_particle;
+  std::map<std::string, float> _map_event;
+  std::map<SIDISParticle::PROPERTY,std::vector<float>> _map_particle;
 
   /* Get true particle info from HIPO Bank */
   int CollectParticlesFromTruth( const std::unique_ptr<clas12::clas12reader>&,
@@ -71,8 +72,7 @@ class SIDISKinematicsReco{
 
 
   /* Write particle information to the tree */
-  int WriteParticlesToTree ( const std::unique_ptr<clas12::clas12reader>&,
-			     type_map_part& );
+  int WriteParticlesToTree ( type_map_part& );
 
 
   /* Add truth event information */

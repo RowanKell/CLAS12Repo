@@ -10,9 +10,8 @@ R__LOAD_LIBRARY(libclas12ana.so)
 using namespace std;
 
 int pipi0_process(
-			const char * inputFile = "/work/clas12/users/gmat/CLAS12Analysis/data/raw/",
 			const char * outputFile = "/work/clas12/users/gmat/CLAS12Analysis/data/raw/test.root"
-			)
+		  )
 {
   //---------------
   // Load libraries
@@ -35,6 +34,9 @@ int pipi0_process(
   settings.addFinalState(22,2,false); // 2 or more gammas
   settings.setdoMC(true);
   settings.setdoReco(true);
+
+  std::string dirname = "/w/hallb-scshelf2102/clas12/users/gmat/CLAS12Analysis/data/raw/sample/";
+  settings.addHipoFile(dirname+std::string("Out_DIS_pass1_915_920.hipo_skim23.hipo"));
   //-----------------------------------
   // Import Settings into Processing Framework
   //-----------------------------------
@@ -44,9 +46,9 @@ int pipi0_process(
   //-----------------------------------
   ana->Init();
   //-----------------------------------
-  // Process an event
+  // Process all events
   //-----------------------------------
-  ana->process_event();
+  ana->process_events();
   //-----------------------------------
   // End processing
   //-----------------------------------

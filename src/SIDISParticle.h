@@ -3,7 +3,7 @@
 
 #include <utility>
 #include <iostream>
-
+#include <climits>
 class SIDISParticle
 {
  public: 
@@ -30,10 +30,12 @@ class SIDISParticle
   enum PROPERTY_TYPE
   {//
     type_int = 1,
-    type_double = 2
+    type_float = 2
   };
 
   static std::pair<const std::string,PROPERTY_TYPE> get_property_info(PROPERTY prop_id);
-
+  virtual float get_property_float(const PROPERTY prop_id) const {return -999.999;}
+  virtual int   get_property_int(const PROPERTY prop_id) const {return INT_MIN;}
+  virtual unsigned int   get_property_uint(const PROPERTY prop_id) const {return UINT_MAX;}
 };
 #endif

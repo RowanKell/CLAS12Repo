@@ -11,11 +11,11 @@ std::pair<const std::string, SIDISParticle::PROPERTY_TYPE> SIDISParticle::get_pr
     case part_pid:
       return std::make_pair("pid", SIDISParticle::type_int);
     case part_pt:
-      return std::make_pair("pt", SIDISParticle::type_double);
+      return std::make_pair("pt", SIDISParticle::type_float);
     case part_pz:
-      return std::make_pair("pz", SIDISParticle::type_double);
+      return std::make_pair("pz", SIDISParticle::type_float);
     case part_E:
-      return std::make_pair("E", SIDISParticle::type_double);
+      return std::make_pair("E", SIDISParticle::type_float);
 
       // ----------------
       

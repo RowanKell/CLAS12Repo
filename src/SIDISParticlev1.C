@@ -14,8 +14,35 @@ SIDISParticlev1::Reset()
   prop_map.clear();
 }
 
+float
+SIDISParticlev1::get_property_float(const PROPERTY prop_id) const
+{
+  prop_map_t::const_iterator i = prop_map.find(prop_id);
+  if (i!=prop_map.end()) return u_property(i->second).ddata;
+
+  return   -999.999 ;
+}
+
+int
+SIDISParticlev1::get_property_int(const PROPERTY prop_id) const
+{
+  prop_map_t::const_iterator i = prop_map.find(prop_id);
+  if (i!=prop_map.end()) return u_property(i->second).idata;
+
+  return   INT_MIN ;
+}
+
+uint
+SIDISParticlev1::get_property_uint(const PROPERTY prop_id) const
+{
+  prop_map_t::const_iterator i = prop_map.find(prop_id);
+  if (i!=prop_map.end()) return u_property(i->second).uidata;
+
+  return   UINT_MAX ;
+}
+
 void
-SIDISParticlev1::set_property(const PROPERTY prop_id, const double value)
+SIDISParticlev1::set_property(const PROPERTY prop_id, const float value)
 {
   prop_map[prop_id] = u_property(value).get_storage();
 }

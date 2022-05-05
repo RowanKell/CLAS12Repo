@@ -31,8 +31,8 @@ int SIDISKinematicsReco::Init()
 
   // Create event variable map 
   // -------------------------  
-  double dummy = 0;
-  std::vector<double> vdummy;
+  float dummy = 0;
+  std::vector<float> vdummy;
 
   _map_event.insert( make_pair( "nParticles" , dummy ) );
   _map_event.insert( make_pair( "nPhotons" , dummy ) );
@@ -58,14 +58,14 @@ int SIDISKinematicsReco::Init()
   
   // Add Event Branches
   // -------------------------
-  for(map< string , double >::iterator it = _map_event.begin(); it!= _map_event.end(); ++it)
+  for(map< string , float >::iterator it = _map_event.begin(); it!= _map_event.end(); ++it)
     {
       _tree_MC->Branch( (it->first).c_str() , &(it->second) );
     }
   
   // Add Particle Branches
   // -------------------------
-  for (map< SIDISParticle::PROPERTY, std::vector<double> >::iterator it = _map_particle.begin(); it!=_map_particle.end(); ++it)
+  for (map< SIDISParticle::PROPERTY, std::vector<float> >::iterator it = _map_particle.begin(); it!=_map_particle.end(); ++it)
     {
       _tree_MC->Branch( SIDISParticle::get_property_info( (it->first) ).first.c_str(), &(it->second));
     }
@@ -129,10 +129,6 @@ int SIDISKinematicsReco::process_events()
     if(_c12->getDetParticles().empty())
       continue;
     
-    // Only analyze event if we have the desired number of detected particles
-    //  if(test->getDetParticles().empty())
-    //  return 1;
-
     // Parse through true Monte Carlo data
     if(_settings.doMC())
       {
@@ -146,7 +142,7 @@ int SIDISKinematicsReco::process_events()
 	CollectParticlesFromTruth( _c12, particleMap );
 
 	/* Write particle information to Tree */
-	//WriteParticlesToTree( _c12, particleMap );
+	WriteParticlesToTree( particleMap );
       
 	/* Add event information */
 	//      AddTruthEventInfo( _c12 );
@@ -167,6 +163,46 @@ int SIDISKinematicsReco::process_events()
 int SIDISKinematicsReco::CollectParticlesFromTruth(const std::unique_ptr<clas12::clas12reader>& _c12,
 						   type_map_part& particleMap )
 {
+  // Get pointer to Monte Carlo particles in event
+  auto mcparticles=_c12->mcparts();
+
+  // Loop over all particles
+  for(int idx = 0 ; idx < mcparticles->getRows() ; idx++){
+    
+    // Get particle in MC::Lund
+    mcparticles->setEntry(idx);
+    if(mcparticles->getType()!=1) // Reject non-final state
+      continue; 
+    
+    // Create new SIDISParticle
+    SIDISParticlev1 *sp = new SIDISParticlev1();
+    sp->set_candidate_id( particleMap.size() + 1 );
+
+    int pid = mcparticles->getPid();
+    float px = mcparticles->getPx();
+    float py = mcparticles->getPy();
+    float pz = mcparticles->getPz();
+    float m = mcparticles->getMass();
+    
+    float pt = sqrt(px*px+py*py);
+    float p  = sqrt(pt*pt+pz*pz);
+    float E  = sqrt(p*p+m*m);
+
+    sp->set_property( SIDISParticle::part_pid, pid);
+    sp->set_property( SIDISParticle::part_pt,  pt);
+    sp->set_property( SIDISParticle::part_pz,  pz);
+    sp->set_property( SIDISParticle::part_E,   E);
+    
+    // Add SIDISParticle to the collection
+    particleMap.insert ( make_pair( sp->get_candidate_id() , sp) );
+  }
+  return 0;
+}
+
+
+int SIDISKinematicsReco::CollectParticlesFromReco(const std::unique_ptr<clas12::clas12reader>& _c12,
+						   type_map_part& particleMap )
+{
   // Get std::vector<> of particles in event
   auto particles=_c12->getDetParticles();
 
@@ -181,8 +217,10 @@ int SIDISKinematicsReco::CollectParticlesFromTruth(const std::unique_ptr<clas12:
 }
 
 
-int SIDISKinematicsReco::WriteParticlesToTree(const std::unique_ptr<clas12::clas12reader>& _c12,
-					      type_map_part& particleMap )
+
+
+
+int SIDISKinematicsReco::WriteParticlesToTree(type_map_part& particleMap )
 {
   /* Get number of particles */
   ( _map_event.find("nParticles") )->second = particleMap.size();
@@ -191,8 +229,18 @@ int SIDISKinematicsReco::WriteParticlesToTree(const std::unique_ptr<clas12::clas
   for (type_map_part::iterator it = particleMap.begin(); it!= particleMap.end(); ++it)
     {
       
-      for (map< SIDISParticle::PROPERTY , std::vector<double> >::iterator it_prop = _map_particle.begin(); it_prop!= _map_particle.end(); ++it_prop)
+      for (map< SIDISParticle::PROPERTY , std::vector<float> >::iterator it_prop = _map_particle.begin(); it_prop!= _map_particle.end(); ++it_prop)
 	{
+	  switch ( SIDISParticle::get_property_info( (it_prop->first) ).second ) {
+	    
+          case SIDISParticle::type_float :
+            (it_prop->second).push_back( (it->second)->get_property_float( (it_prop->first) ) );
+            break;
+
+          case SIDISParticle::type_int :
+            (it_prop->second).push_back( (it->second)->get_property_int( (it_prop->first) ) );
+            break;
+	  }
 	  // Not confident about this section
 	  //(it_prop->second).push_back( (it->second) ); 
 	}
@@ -203,13 +251,13 @@ int SIDISKinematicsReco::WriteParticlesToTree(const std::unique_ptr<clas12::clas
 void SIDISKinematicsReco::ResetBranchMap()
 {
   // Event branch
-  for(map<std::string,double>::iterator it = _map_event.begin(); it!=_map_event.end();++it)
+  for(map<std::string,float>::iterator it = _map_event.begin(); it!=_map_event.end();++it)
     {
       (it->second) = NAN;
     } 
  
   // Particle branch
-  for(map<SIDISParticle::PROPERTY , std::vector<double>>::iterator it = _map_particle.begin(); it!=_map_particle.end(); ++it)
+  for(map<SIDISParticle::PROPERTY , std::vector<float>>::iterator it = _map_particle.begin(); it!=_map_particle.end(); ++it)
     {
       (it->second).clear();
     }
