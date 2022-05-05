@@ -27,11 +27,14 @@ class Settings{
   void setWrange(double, double);
   void setyrange(double, double);
   void addFinalState(int, int, bool);
+  void addHipoFile(std::string);
 
-  std::vector<int> getFinalStatePIDs() const;
+  std::vector<int> getFinalStatePIDs();
   int getN_fromPID(int);
   bool isExact_fromPID(int);
   
+  std::vector<std::string> hipoFileStrings();
+
  private:
 
   bool _doMC = false;
@@ -55,6 +58,8 @@ class Settings{
   std::vector<int> _fNpart;
   std::vector<bool> _fExact;
   
+  // std::vector of Hipo filename strings
+  std::vector<std::string> _hipoFileStrings;
   
 };
 #endif

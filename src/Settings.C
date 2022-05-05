@@ -61,8 +61,12 @@ void Settings::addFinalState(int pid, int n, bool exact=false) {
     }
   return;
 }
-  
-std::vector<int> Settings::getFinalStatePIDs() const { return _fPID; }
+
+void Settings::addHipoFile(std::string filename){
+  _hipoFileStrings.push_back(filename);
+}
+
+std::vector<int> Settings::getFinalStatePIDs(){ return _fPID; }
 
 int Settings::getN_fromPID(int pid){
   for(unsigned int idx = 0 ; idx < _fPID.size() ; idx++)
@@ -83,3 +87,5 @@ bool Settings::isExact_fromPID(int pid){
   
   return false;
 }
+
+std::vector<std::string> Settings::hipoFileStrings() {return _hipoFileStrings;}

@@ -3,21 +3,6 @@
 // SIDISKinematicsReco.C()
 // 
 // Written by Gregory Matousek
-//
-// Purpose
-// ----------------
-// Read in MC or data hipo file and extract events
-// with scattered electron, pi+/pi-, and at least 2 photons
-// 
-// The extracted data is stored within a ROOT Tree for later cuts
-//
-// Also, basic SIDIS cuts are applied to the data
-// 
-// Changelog
-// ----------------
-// 4/27/2022: Program was created for the first time
-// 4/28/2022: Program was renamed
-//            Adding support for Makefile
 // 
 // ----------------------------
 
@@ -38,7 +23,7 @@ SIDISKinematicsReco::SIDISKinematicsReco(std::string outfilename):
 
 int SIDISKinematicsReco::Init()
 {
-
+  
   // Create TFile
   // -------------------------
 
@@ -92,40 +77,112 @@ int SIDISKinematicsReco::Init()
   _tree_Reco->SetName("event_reco");
   _tree_Reco->SetTitle("A Tree with *reconstructred* event and particle information");
 
-  return 0;
-}
 
-int SIDISKinematicsReco::process_event()
-{
-  // Parse through true Monte Carlo data
-  if(_settings.doMC())
-    {
-      // Reset the branch map
-      ResetBranchMap();
+  // Load in HipoFiles
+  // -------------------------
+  if(_settings.hipoFileStrings().size()==0){
+    std::cout << "ERROR in SIDISKinematicsReco::Init() -- No files added to hipoChain. Double-check that 'addHipoFile' in Settings.h was called by processing script" << std::endl;
+    return -1;
+  }
 
-      // Using the particle's pindex as a key (should be unique for each reco particle, but could be wrong)
-      type_map_part particleMap;
-      
-      /* Add particle information */
-      //      CollectParticlesFromTruth( particleMap );
+  for(unsigned int idx = 0 ; idx < _settings.hipoFileStrings().size() ; idx ++){
+    _chain.Add(_settings.hipoFileStrings().at(idx).c_str());
+  }
 
-      /* Write particle information to Tree */
-      //WriteParticlesToTree( particleMap );
-      
-      /* Add event information */
-      //      AddTruthEventInfo();
-      
-      /* Fill MC tree */
-      _tree_MC->Fill();
-    }
+  // Configure CLAS12Reader
+  // -------------------------
+  _config_c12=_chain.GetC12Reader();
   
-  /* Increase event # */
-  _ievent++;
+  // Initialize Hipo file settings
+  // -------------------------------
+  InitHipo();
+  return 0;
+}
+
+int SIDISKinematicsReco::InitHipo()
+{
+  // -----------------------------------------------------
+  // Using the _config_c12 object, cut PIDs for each event
+  // -----------------------------------------------------
+  std::vector<int> finalStatePIDs = _settings.getFinalStatePIDs();
+  for(unsigned int idx = 0 ; idx < finalStatePIDs.size(); idx++){
+    int pid = finalStatePIDs.at(idx);
+    int npid = _settings.getN_fromPID(pid);
+    bool exactpid = _settings.isExact_fromPID(pid);
+    if(exactpid==true)
+      _config_c12->addExactPid(pid,npid);
+    else
+      _config_c12->addAtLeastPid(pid,npid);
+  }
+
+
+  return 0;
+}
+int SIDISKinematicsReco::process_events()
+{
+  // Establish CLAS12 event parser
+  // -------------------------
+  auto &_c12= _chain.C12ref();
+  
+  // Move to the next event in the Hipo chain
+  while(_chain.Next()==true){
+    if(_c12->getDetParticles().empty())
+      continue;
+    
+    // Only analyze event if we have the desired number of detected particles
+    //  if(test->getDetParticles().empty())
+    //  return 1;
+
+    // Parse through true Monte Carlo data
+    if(_settings.doMC())
+      {
+	// Reset the branch map
+	ResetBranchMap();
+
+	// Using the particle's pindex as a key
+	type_map_part particleMap;
+      
+	/* Add particle information */
+	CollectParticlesFromTruth( _c12, particleMap );
+
+	/* Write particle information to Tree */
+	//WriteParticlesToTree( _c12, particleMap );
+      
+	/* Add event information */
+	//      AddTruthEventInfo( _c12 );
+      
+	/* Fill MC tree */
+	_tree_MC->Fill();
+      }
+  
+    /* Increase event # */
+    _ievent++;
+  }
+  
+  std::cout << " All events completed \n Done." << std::endl;
 
   return 0;
 }
 
-int SIDISKinematicsReco::WriteParticlesToTree( type_map_part& particleMap )
+int SIDISKinematicsReco::CollectParticlesFromTruth(const std::unique_ptr<clas12::clas12reader>& _c12,
+						   type_map_part& particleMap )
+{
+  // Get std::vector<> of particles in event
+  auto particles=_c12->getDetParticles();
+
+  // Loop over all particles
+  for(unsigned int idx = 0 ; idx < particles.size() ; idx++){
+    auto particle = particles.at(idx);
+    // Skip over particles with PIDs that do not match Settings
+    particle->getPid();
+    //    int part_pid = parts.at(idx)
+  }
+  return 0;
+}
+
+
+int SIDISKinematicsReco::WriteParticlesToTree(const std::unique_ptr<clas12::clas12reader>& _c12,
+					      type_map_part& particleMap )
 {
   /* Get number of particles */
   ( _map_event.find("nParticles") )->second = particleMap.size();

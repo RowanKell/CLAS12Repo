@@ -28,13 +28,15 @@ pkginclude_HEADERS = \
   ../src/Settings.h \
   ../src/SIDISKinematicsReco.h \
   ../src/SIDISParticle.h \
-  ../src/Constants.h
+  ../src/Constants.h \
+  ../src/SIDISParticlev1.h
 
 libclas12ana_la_SOURCES = \
   ../src/Kinematics.C \
   ../src/Settings.C \
   ../src/SIDISKinematicsReco.C \
-  ../src/SIDISParticle.C
+  ../src/SIDISParticle.C \
+  ../src/SIDISParticlev1.C
 
 %_Dict.C: ../src/%.h ../src/%LinkDef.h
 	rootcint -f $@ @CINTDEFS@ -c $(AM_CPPFLAGS) $^
