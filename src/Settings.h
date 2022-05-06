@@ -16,6 +16,7 @@ class Settings{
   bool doReco() const;
   bool connectMC2Reco() const;
   bool ignoreOtherRecoParticles() const;
+  double electronBeamEnergy() const;
   double Q2min() const;
   double Q2max() const;
   double Wmin() const;
@@ -29,6 +30,7 @@ class Settings{
   void setdoReco(bool);
   void setconnectMC2Reco(bool);
   void setignoreOtherRecoParticles(bool);
+  void setElectronBeamEnergy(double);
   void setQ2range(double, double);
   void setWrange(double, double);
   void setyrange(double, double);
@@ -52,6 +54,7 @@ class Settings{
   bool _connectMC2Reco = false;
   bool _ignoreOtherRecoParticles = false;
 
+  double _electronBeamEnergy = 10.6;
   double _Q2min = -999;
   double _Q2max = 999;
   double _Wmin  = -999;

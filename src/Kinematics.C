@@ -48,7 +48,7 @@ double Kinematics::nu(double E1, double E2){
 }
 
 double Kinematics::W(double Q2, double mT, double nu){
-  return -Q2 + pow(mT,2) + 2 * mT * nu;
+  return sqrt(-Q2 + pow(mT,2) + 2 * mT * nu);
 } 
 
 double Kinematics::th(double Pt, double Pz){

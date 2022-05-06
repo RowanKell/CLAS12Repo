@@ -15,7 +15,7 @@ SIDISKinematicsReco::SIDISKinematicsReco(std::string outfilename):
   _tfile(nullptr),
   _tree_MC(nullptr),
   _tree_Reco(nullptr),
-  _electron_beam_energy(12)
+  _electron_beam_energy(0)
 {
   _outfilename = outfilename;
   cout << "Initialized SIDISKinematicsReco" << endl;
@@ -96,6 +96,10 @@ int SIDISKinematicsReco::Init()
   for(unsigned int idx = 0 ; idx < _settings.hipoFileStrings().size() ; idx ++){
     _chain.Add(_settings.hipoFileStrings().at(idx).c_str());
   }
+
+  // Set beam energy
+  // -------------------------
+  _electron_beam_energy = _settings.electronBeamEnergy();
 
   // Configure CLAS12Reader
   // -------------------------

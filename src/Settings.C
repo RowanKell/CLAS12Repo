@@ -11,6 +11,7 @@ bool Settings::doMC() const {return _doMC;}
 bool Settings::doReco() const {return _doReco;}
 bool Settings::connectMC2Reco() const {return _connectMC2Reco;}
 bool Settings::ignoreOtherRecoParticles() const {return _ignoreOtherRecoParticles;}
+double Settings::electronBeamEnergy() const {return _electronBeamEnergy;}
 double Settings::Q2min() const {return _Q2min;}
 double Settings::Q2max() const {return _Q2max;}
 double Settings::Wmin() const {return _Wmin;}
@@ -35,6 +36,11 @@ void Settings::setconnectMC2Reco(bool b){
 
 void Settings::setignoreOtherRecoParticles(bool b){
   _ignoreOtherRecoParticles = b;
+  return;
+}
+
+void Settings::setElectronBeamEnergy(double E){
+  _electronBeamEnergy = E;
   return;
 }
 

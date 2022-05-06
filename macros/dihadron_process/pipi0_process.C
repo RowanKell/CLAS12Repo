@@ -26,6 +26,7 @@ int pipi0_process(
   // Create Settings for Study
   //-----------------------------------
   Settings settings;
+  settings.setElectronBeamEnergy(10.6);
   settings.setQ2range(1,100);
   settings.setWrange(2,100);
   settings.setyrange(0,1);
