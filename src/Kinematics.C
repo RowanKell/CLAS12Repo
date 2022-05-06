@@ -6,6 +6,10 @@ double Kinematics::Q2(double E1, double E2, double cth){
   return 2.0 * E1 * E2 * (1.0 - cth);
 }
 
+double Kinematics::x(double Q2, double s, double y){
+  return Q2/s/y;
+}
+
 double Kinematics::Px(double P, double th, double phi){
   return P * sin(th) * cos(phi);
 }
@@ -32,7 +36,7 @@ double Kinematics::E(double M, double P){
 
 double Kinematics::cth(double Px, double Py, double Pz){
   double Pt = Kinematics::Pt(Px,Py);
-  return cos(Pz / (pow(Pz*Pz+Pt*Pt,0.5)));
+  return Pz / (pow(Pz*Pz+Pt*Pt,0.5));
 }
 
 double Kinematics::y(double E1, double E2){

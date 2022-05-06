@@ -7,6 +7,7 @@
 class Kinematics {
  public:
   static double Q2(double E1, double E2, double cth);
+  static double x(double Q2, double s, double y);
   static double Px(double P, double th, double phi);
   static double Py(double P, double th, double phi);
   static double Pz(double P, double th, double phi);

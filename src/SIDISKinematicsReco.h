@@ -51,6 +51,14 @@ class SIDISKinematicsReco{
   Settings _settings;
   Kinematics _kin;
 
+  int _idx_RECKin;
+  int _ix;
+  int _iQ2;
+  int _iy;
+  int _inu;
+  int _iW;
+
+
   std::string _outfilename="";
   TFile *_tfile;
   TTree *_tree_MC;
@@ -79,6 +87,9 @@ class SIDISKinematicsReco{
 
   /* Add truth event information */
   int AddTruthEventInfo(const std::unique_ptr<clas12::clas12reader>&);
+
+  /* Add reco event information */
+  int AddRecoEventInfo(const std::unique_ptr<clas12::clas12reader>&);
 
   
   /* Reset branch maps for each event */

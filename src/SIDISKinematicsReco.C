@@ -36,7 +36,6 @@ int SIDISKinematicsReco::Init()
 
   _map_event.insert( make_pair( "nParticles" , dummy ) );
   _map_event.insert( make_pair( "nPhotons" , dummy ) );
-  _map_event.insert( make_pair( "s" , dummy ) );
   _map_event.insert( make_pair( "x" , dummy ) );
   _map_event.insert( make_pair( "y" , dummy ) );
   _map_event.insert( make_pair( "Q2" , dummy ) );
@@ -124,6 +123,15 @@ int SIDISKinematicsReco::InitHipo()
       _config_c12->addAtLeastPid(pid,npid);
   }
 
+  // -----------------------------------------------------
+  // Add banks to the _config_c12 object
+  // -----------------------------------------------------
+  _idx_RECKin = _config_c12->addBank("REC::Kinematics");
+  _ix = _config_c12->getBankOrder(_idx_RECKin,"x");
+  _iQ2 = _config_c12->getBankOrder(_idx_RECKin,"Q2"); 
+  _iy = _config_c12->getBankOrder(_idx_RECKin,"y");
+  _inu = _config_c12->getBankOrder(_idx_RECKin,"nu");
+  _iW = _config_c12->getBankOrder(_idx_RECKin,"W");
 
   return 0;
 }
@@ -158,6 +166,11 @@ int SIDISKinematicsReco::process_events()
 	/* Write particle information to Tree */
 	WriteParticlesToTree (  recoparticleMap );
 
+	/* Add event information */
+	/* Skip event if it fails cuts */
+	if(AddRecoEventInfo( _c12 )!=0)
+	  continue;
+
 	/* fill reco tree */
 	_tree_Reco->Fill();
       }
@@ -181,9 +194,8 @@ int SIDISKinematicsReco::process_events()
 	WriteParticlesToTree( particleMap );
       
 	/* Add event information */
-	//      AddTruthEventInfo( _c12 );
+	AddTruthEventInfo( _c12 );
       
-	
 	/* Fill MC tree */
 	_tree_MC->Fill();
       }
@@ -260,10 +272,18 @@ int SIDISKinematicsReco::CollectParticlesFromReco(const std::unique_ptr<clas12::
 
   // Loop over all particles
   for(unsigned int idx = 0 ; idx < particles.size() ; idx++){
+    // Extract each particle from event one-at-a-time
     auto particle = particles.at(idx);
-    // Skip over particles with PIDs that do not match Settings
     
+    // Extract particle information
     int pid = particle->getPid();
+    // Skip over particles that are not interesting in the final state
+    if(_settings.ignoreOtherRecoParticles() && _settings.getN_fromPID(pid)==0)
+      continue;
+    float chi2 = particle->getChi2Pid();
+    // Skip over particles that both need a chi2pid cut, and do not satisfy it
+    if(_settings.needsChi2PidCut(pid) && abs(chi2) > _settings.abschi2pidmax())
+      continue;
     float p = particle->getP();
     float theta = particle->getTheta();
     float eta = _kin.eta(theta);
@@ -277,8 +297,9 @@ int SIDISKinematicsReco::CollectParticlesFromReco(const std::unique_ptr<clas12::
 
     int pindex = particle->getIndex();
     float beta = particle->getBeta();
-    float chi2 = particle->getChi2Pid();
 
+   
+   
     SIDISParticlev1 *sp = new SIDISParticlev1();
     sp->set_candidate_id( pindex );
     
@@ -328,7 +349,71 @@ int SIDISKinematicsReco::ConnectTruth2Reco( type_map_part& particleMap,
   
 }
 
+int SIDISKinematicsReco::AddTruthEventInfo(const std::unique_ptr<clas12::clas12reader>& _c12)
+{
+  // Get pointer to Monte Carlo particles in event
+  auto mcparticles=_c12->mcparts();
 
+  // Loop over all particles
+  for(int idx = 0 ; idx < mcparticles->getRows() ; idx++){
+   
+    // Get particle in MC::Lund
+    mcparticles->setEntry(idx);
+    
+    // Test if scattered lepton
+    if(mcparticles->getParent()==1 && mcparticles->getPid()==11){
+      float px = mcparticles->getPx();
+      float py = mcparticles->getPy();
+      float pz = mcparticles->getPz();
+      float m = mcparticles->getMass();
+      float p = _kin.P(px,py,pz);
+      float E = _kin.E(m,p);
+      float cth = _kin.cth(px,py,pz);
+      float Q2 = _kin.Q2(_electron_beam_energy,E,cth);
+      float y  = _kin.y(_electron_beam_energy, E);
+      float nu  = _kin.nu(_electron_beam_energy, E);
+      float W  = _kin.W(Q2,protonMass,nu);
+      float s  = protonMass*protonMass+electronMass*electronMass+2*protonMass*_electron_beam_energy;
+      float x = _kin.x(Q2,s,y);
+
+      (_map_event.find("x"))->second = x;
+      (_map_event.find("Q2"))->second = Q2;
+      (_map_event.find("y"))->second = y;
+      (_map_event.find("nu"))->second = nu;
+      (_map_event.find("W"))->second = W;
+
+      break;
+    }
+  }
+  
+  return 0;
+}
+
+
+int SIDISKinematicsReco::AddRecoEventInfo(const std::unique_ptr<clas12::clas12reader>& _c12)
+{
+  double reco_x=_c12->getBank(_idx_RECKin)->getDouble(_ix,0);
+  double reco_Q2=_c12->getBank(_idx_RECKin)->getDouble(_iQ2,0);
+  double reco_y=_c12->getBank(_idx_RECKin)->getDouble(_iy,0);
+  double reco_nu=_c12->getBank(_idx_RECKin)->getDouble(_inu,0);
+  double reco_W=_c12->getBank(_idx_RECKin)->getDouble(_iW,0);
+  
+  if(reco_W < _settings.Wmin() || reco_W > _settings.Wmax())
+    return -1;
+  else if(reco_y < _settings.ymin() || reco_y > _settings.ymax())
+    return -1;
+  else if(reco_Q2 < _settings.Q2min() || reco_Q2 > _settings.Q2max())
+    return -1;
+  else{
+    (_map_event.find("x"))->second = reco_x; 
+    (_map_event.find("Q2"))->second = reco_Q2;
+    (_map_event.find("y"))->second = reco_y;
+    (_map_event.find("nu"))->second = reco_nu;
+    (_map_event.find("W"))->second = reco_W;
+  }
+  
+  return 0;
+}
 
 
 int SIDISKinematicsReco::WriteParticlesToTree(type_map_part& particleMap )
@@ -352,8 +437,6 @@ int SIDISKinematicsReco::WriteParticlesToTree(type_map_part& particleMap )
             (it_prop->second).push_back( (it->second)->get_property_int( (it_prop->first) ) );
             break;
 	  }
-	  // Not confident about this section
-	  //(it_prop->second).push_back( (it->second) ); 
 	}
     }
   
@@ -390,83 +473,3 @@ int SIDISKinematicsReco::End()
   
   return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-//int SIDISKinematicsReco(int argc, char *argv[])
-int SIDISKinematicsReco(char *argv)
-{
-  int argc=1;
-  // Read cut settings
-  // -------------------------
-  Settings settings;
-  if(argc<1)
-    {
-      std::cout << " Missing arguments. Please provide runcard name " << std::endl;
-      return -1;
-    }
-  else
-    {
-      if(!settings.readCard(argv)){
-	return -1;
-      }
-      settings.loadSettings();
-    }
-
-
-  // Grab Hipofile name
-  // -------------------------  
-  string hipofile = settings.Filename();
-  
-  // Create HipoChain
-  // -------------------------  
-  HipoChain chain;
-  chain.Add(hipofile);
-
-  // Create C12reader
-  // -------------------------  
-  auto config_c12=chain.GetC12Reader();
-
-  // Get specific final states
-  // i) At least 1 electron
-  // ii) One charged pion
-  // iii) At least 2 photons
-  // -------------------------  
-  config_c12->addAtLeastPid(11,1);
-
-  if(settings.piPID()==0){
-    std::cout << " Missing pion charge in CutCard. Must be included (e.g. picharge        1) " << std::endl;
-    return -1;
-  }
-  else{
-    config_c12->addExactPid(settings.piPID(),1);
-  }
-  config_c12->addAtLeastPid(22,2);
-  
-  auto& c12=chain.C12ref();
-  
-  // Parse through HIPO file
-  // -------------------------  
-  while(chain.Next()==true){
-    if(c12->getDetParticles().empty())
-      continue;
-    
-    //    auto parts=c12->getDetParticles();
-    std::cout << c12->getNPid(11) << std::endl;
-  }
-  
-
-  return 0;
-}
-*/
-
