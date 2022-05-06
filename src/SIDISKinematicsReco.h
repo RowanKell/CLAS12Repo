@@ -70,6 +70,8 @@ class SIDISKinematicsReco{
   int CollectParticlesFromReco( const std::unique_ptr<clas12::clas12reader>&,
 				type_map_part& );
 
+  /* Connect the pindex of the Reco to the MC map */
+  int ConnectTruth2Reco( type_map_part&, type_map_part&);
 
   /* Write particle information to the tree */
   int WriteParticlesToTree ( type_map_part& );

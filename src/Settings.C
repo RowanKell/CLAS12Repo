@@ -9,6 +9,7 @@ Settings::Settings()
 
 bool Settings::doMC() const {return _doMC;}
 bool Settings::doReco() const {return _doReco;}
+bool Settings::connectMC2Reco() const {return _connectMC2Reco;}
 double Settings::Q2min() const {return _Q2min;}
 double Settings::Q2max() const {return _Q2max;}
 double Settings::Wmin() const {return _Wmin;}
@@ -23,6 +24,11 @@ void Settings::setdoMC(bool b){
 
 void Settings::setdoReco(bool b){
   _doReco = b;
+  return;
+}
+
+void Settings::setconnectMC2Reco(bool b){
+  _connectMC2Reco = b;
   return;
 }
 

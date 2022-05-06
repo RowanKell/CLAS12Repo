@@ -46,9 +46,18 @@ int SIDISKinematicsReco::Init()
   // Create particle map 
   // -------------------------  
   _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_pid , vdummy) );
-  _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_pt , vdummy) );
+  _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_px , vdummy) );
+  _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_py , vdummy) );
   _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_pz , vdummy) );
+  _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_pt , vdummy) );
+  _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_p , vdummy) );
   _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_E , vdummy) );
+  _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_theta , vdummy) );
+  _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_eta , vdummy) );
+  _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_phi , vdummy) );
+  _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_pindex , vdummy) );
+  _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_beta , vdummy) );
+  _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_chi2 , vdummy) );
    
   // Create Monte Carlo TTree
   // -------------------------
@@ -74,7 +83,7 @@ int SIDISKinematicsReco::Init()
   // as Monte Carlo copy
   // -------------------------
   _tree_Reco = _tree_MC->CloneTree();
-  _tree_Reco->SetName("event_reco");
+  _tree_Reco->SetName("tree_reco");
   _tree_Reco->SetTitle("A Tree with *reconstructred* event and particle information");
 
 
@@ -128,18 +137,45 @@ int SIDISKinematicsReco::process_events()
   while(_chain.Next()==true){
     if(_c12->getDetParticles().empty())
       continue;
+
+    // Create map to store reconstructed SIDIS particles
+    // Use the pindex as a unique key
+    type_map_part recoparticleMap;
+
+    // Create map to store true SIDIS particles
+    type_map_part particleMap;
+
+    
+    // Parse through reconstructed data
+    if(_settings.doReco())
+      {
+	// Reset the branch map
+	ResetBranchMap();
+		
+	/* Add reco particle information */
+	CollectParticlesFromReco( _c12, recoparticleMap );
+
+	/* Write particle information to Tree */
+	WriteParticlesToTree (  recoparticleMap );
+
+	/* fill reco tree */
+	_tree_Reco->Fill();
+      }
     
     // Parse through true Monte Carlo data
     if(_settings.doMC())
       {
 	// Reset the branch map
 	ResetBranchMap();
-
-	// Using the particle's pindex as a key
-	type_map_part particleMap;
       
 	/* Add particle information */
 	CollectParticlesFromTruth( _c12, particleMap );
+	
+	/* Connect the pindex of the Reco to the MC */
+	if(_settings.connectMC2Reco())
+	  {
+	    ConnectTruth2Reco( particleMap, recoparticleMap );
+	  }
 
 	/* Write particle information to Tree */
 	WriteParticlesToTree( particleMap );
@@ -147,6 +183,7 @@ int SIDISKinematicsReco::process_events()
 	/* Add event information */
 	//      AddTruthEventInfo( _c12 );
       
+	
 	/* Fill MC tree */
 	_tree_MC->Fill();
       }
@@ -176,7 +213,7 @@ int SIDISKinematicsReco::CollectParticlesFromTruth(const std::unique_ptr<clas12:
     
     // Create new SIDISParticle
     SIDISParticlev1 *sp = new SIDISParticlev1();
-    sp->set_candidate_id( particleMap.size() + 1 );
+    sp->set_candidate_id( particleMap.size() );
 
     int pid = mcparticles->getPid();
     float px = mcparticles->getPx();
@@ -184,24 +221,39 @@ int SIDISKinematicsReco::CollectParticlesFromTruth(const std::unique_ptr<clas12:
     float pz = mcparticles->getPz();
     float m = mcparticles->getMass();
     
-    float pt = sqrt(px*px+py*py);
-    float p  = sqrt(pt*pt+pz*pz);
-    float E  = sqrt(p*p+m*m);
+    float pt = _kin.Pt(px,py);
+    float p  = _kin.P(px,py,pz);
+    float E  = _kin.E(m,p);
+
+    float theta = _kin.th(pt,pz);
+    float eta = _kin.eta(theta);
+    float phi   = _kin.phi(px,py);
 
     sp->set_property( SIDISParticle::part_pid, pid);
-    sp->set_property( SIDISParticle::part_pt,  pt);
+    sp->set_property( SIDISParticle::part_px,  px);
+    sp->set_property( SIDISParticle::part_py,  py);
     sp->set_property( SIDISParticle::part_pz,  pz);
+    sp->set_property( SIDISParticle::part_pt,  pt);
+    sp->set_property( SIDISParticle::part_p,  p);
     sp->set_property( SIDISParticle::part_E,   E);
+    sp->set_property( SIDISParticle::part_theta,   theta);
+    sp->set_property( SIDISParticle::part_eta,   eta);
+    sp->set_property( SIDISParticle::part_phi,   phi);
+
+    sp->set_property( SIDISParticle::part_pindex,   -999);
+    sp->set_property( SIDISParticle::part_beta,   -999);
+    sp->set_property( SIDISParticle::part_chi2,   -999);
     
     // Add SIDISParticle to the collection
     particleMap.insert ( make_pair( sp->get_candidate_id() , sp) );
+    
   }
   return 0;
 }
 
 
 int SIDISKinematicsReco::CollectParticlesFromReco(const std::unique_ptr<clas12::clas12reader>& _c12,
-						   type_map_part& particleMap )
+						   type_map_part& recoparticleMap )
 {
   // Get std::vector<> of particles in event
   auto particles=_c12->getDetParticles();
@@ -210,12 +262,71 @@ int SIDISKinematicsReco::CollectParticlesFromReco(const std::unique_ptr<clas12::
   for(unsigned int idx = 0 ; idx < particles.size() ; idx++){
     auto particle = particles.at(idx);
     // Skip over particles with PIDs that do not match Settings
-    particle->getPid();
-    //    int part_pid = parts.at(idx)
+    
+    int pid = particle->getPid();
+    float p = particle->getP();
+    float theta = particle->getTheta();
+    float eta = _kin.eta(theta);
+    float phi = particle->getPhi();
+    float px = _kin.Px(p,theta,phi);
+    float py = _kin.Py(p,theta,phi);
+    float pz = _kin.Pz(p,theta,phi);
+    float pt = _kin.Pt(px,py);
+    float m = particle->getCalcMass();
+    float E  = _kin.E(m,p);
+
+    int pindex = particle->getIndex();
+    float beta = particle->getBeta();
+    float chi2 = particle->getChi2Pid();
+
+    SIDISParticlev1 *sp = new SIDISParticlev1();
+    sp->set_candidate_id( pindex );
+    
+    sp->set_property( SIDISParticle::part_pid, pid);
+    sp->set_property( SIDISParticle::part_px,  px);
+    sp->set_property( SIDISParticle::part_py,  py);
+    sp->set_property( SIDISParticle::part_pz,  pz);
+    sp->set_property( SIDISParticle::part_pt,  pt);
+    sp->set_property( SIDISParticle::part_p,  p);
+    sp->set_property( SIDISParticle::part_E,   E);
+    sp->set_property( SIDISParticle::part_theta,   theta);
+    sp->set_property( SIDISParticle::part_eta,   eta);
+    sp->set_property( SIDISParticle::part_phi,   phi);
+
+    sp->set_property( SIDISParticle::part_pindex,   pindex);
+    sp->set_property( SIDISParticle::part_beta,   beta);
+    sp->set_property( SIDISParticle::part_chi2,   chi2);
+    
+    // Add SIDISParticle to the collection
+    recoparticleMap.insert ( make_pair( sp->get_candidate_id() , sp) );
+
   }
   return 0;
 }
 
+int SIDISKinematicsReco::ConnectTruth2Reco( type_map_part& particleMap,
+					    type_map_part& recoparticleMap )
+{
+  /* Loop over all reco particles */
+  for (type_map_part::iterator it_reco = recoparticleMap.begin(); it_reco!= recoparticleMap.end() ; ++it_reco){
+
+    double reco_theta = (it_reco->second)->get_property_float(SIDISParticle::part_theta); 
+    double reco_phi = (it_reco->second)->get_property_float(SIDISParticle::part_phi); 
+    
+      /* Loop over all MC particles */
+      for(type_map_part::iterator it_mc = particleMap.begin(); it_mc!= particleMap.end(); ++it_mc){
+	double mc_theta = (it_mc->second)->get_property_float(SIDISParticle::part_theta); 
+	double mc_phi = (it_mc->second)->get_property_float(SIDISParticle::part_phi); 
+	/* Match the *theta* and *phi* of two particles. For details, see https://www.jlab.org/Hall-B/general/thesis/THayward_thesis.pdf */
+	if( abs(reco_phi - mc_phi) < 6*degtorad && abs(reco_theta-mc_theta) < 2*degtorad){
+	  (it_mc->second)->set_property( SIDISParticle::part_pindex, (it_reco->second)->get_property_int(SIDISParticle::part_pindex));
+	}
+      }
+  }
+
+  return 0;
+  
+}
 
 
 

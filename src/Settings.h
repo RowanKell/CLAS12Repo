@@ -14,6 +14,7 @@ class Settings{
   
   bool doMC() const;
   bool doReco() const;
+  bool connectMC2Reco() const;
   double Q2min() const;
   double Q2max() const;
   double Wmin() const;
@@ -23,6 +24,7 @@ class Settings{
 
   void setdoMC(bool);
   void setdoReco(bool);
+  void setconnectMC2Reco(bool);
   void setQ2range(double, double);
   void setWrange(double, double);
   void setyrange(double, double);
@@ -39,6 +41,7 @@ class Settings{
 
   bool _doMC = false;
   bool _doReco = false;
+  bool _connectMC2Reco = false;
 
   double _Q2min = -999;
   double _Q2max = 999;
