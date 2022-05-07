@@ -296,7 +296,9 @@ int SIDISKinematicsReco::CollectParticlesFromReco(const std::unique_ptr<clas12::
     float py = _kin.Py(p,theta,phi);
     float pz = _kin.Pz(p,theta,phi);
     float pt = _kin.Pt(px,py);
-    float m = particle->getCalcMass();
+    float m = 0.0;
+    if(pid!=22)
+      m = particle->getCalcMass();
     float E  = _kin.E(m,p);
 
     int pindex = particle->getIndex();
