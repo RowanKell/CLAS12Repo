@@ -30,10 +30,15 @@ class SIDISParticle
     part_theta = 17,
     part_eta   = 18,
     part_phi   = 19,
+
+    part_vz   = 30,
     
     part_pindex = 50,
     part_beta   = 51,
-    part_chi2   = 52
+    part_chi2   = 52,
+    part_ID   = 53,
+    part_parentID = 54,
+    part_parentPID = 55
   };
 
   enum PROPERTY_TYPE

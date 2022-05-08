@@ -28,6 +28,9 @@ std::pair<const std::string, SIDISParticle::PROPERTY_TYPE> SIDISParticle::get_pr
       return std::make_pair("eta", SIDISParticle::type_float);
     case part_phi:
       return std::make_pair("phi", SIDISParticle::type_float);
+
+    case part_vz:
+      return std::make_pair("vz", SIDISParticle::type_float);
       
     case part_pindex:
       return std::make_pair("pindex", SIDISParticle::type_int);
@@ -35,6 +38,12 @@ std::pair<const std::string, SIDISParticle::PROPERTY_TYPE> SIDISParticle::get_pr
       return std::make_pair("beta", SIDISParticle::type_float);
     case part_chi2:
       return std::make_pair("chi2", SIDISParticle::type_float);
+    case part_ID:
+      return std::make_pair("ID", SIDISParticle::type_int);
+    case part_parentID:
+      return std::make_pair("parentID", SIDISParticle::type_int);
+    case part_parentPID:
+      return std::make_pair("parentPID", SIDISParticle::type_int);
 
       // ----------------
       

@@ -45,9 +45,19 @@ class SIDISKinematicsReco{
     _electron_beam_energy = E;
   }
  
+  void set_verbosity(int j){
+    _verbosity = j;
+  }
+
+  void set_printFrequency(int j){
+    _printEvery = j;
+  }
+
  private:
  
   int _ievent;
+  int _verbosity = 0;
+  int _printEvery = 100000;
   Settings _settings;
   Kinematics _kin;
 

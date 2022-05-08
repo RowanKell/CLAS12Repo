@@ -12,10 +12,17 @@ class Settings{
  public:
   Settings();
   
+  enum eventRecoMethod
+  {
+    useRecKinematicsBank = 1,
+    useLargestPinFD = 2
+  };
+
   bool doMC() const;
   bool doReco() const;
   bool connectMC2Reco() const;
   bool ignoreOtherRecoParticles() const;
+  eventRecoMethod getEventRecoMethod() const;
   double electronBeamEnergy() const;
   double Q2min() const;
   double Q2max() const;
@@ -25,25 +32,31 @@ class Settings{
   double ymax() const;
   double abschi2pidmax() const;
 
-
   void setdoMC(bool);
   void setdoReco(bool);
   void setconnectMC2Reco(bool);
   void setignoreOtherRecoParticles(bool);
+  void setEventRecoMethod(eventRecoMethod);
   void setElectronBeamEnergy(double);
   void setQ2range(double, double);
   void setWrange(double, double);
   void setyrange(double, double);
   void setabschi2pidmax(double);
   void addFinalState(int, int, bool);
-  void addPIDforChi2(int);
-
+  void addPIDforEmin(int,double);
+  void addPIDforPmin(int,double);
+  void addPIDforVzrange(int,double, double);
+  void addPIDforChi2max(int,double);
   void addHipoFile(std::string);
 
   std::vector<int> getFinalStatePIDs();
   int getN_fromPID(int);
   bool isExact_fromPID(int);
-  
+  double getEmin_fromPID(int);
+  double getPmin_fromPID(int);
+  double getVzmin_fromPID(int);
+  double getVzmax_fromPID(int);
+  double getChi2max_fromPID(int);
   std::vector<std::string> hipoFileStrings();
 
   bool needsChi2PidCut(int);
@@ -53,7 +66,7 @@ class Settings{
   bool _doReco = false;
   bool _connectMC2Reco = false;
   bool _ignoreOtherRecoParticles = false;
-
+  eventRecoMethod _eventRecoMethod;
   double _electronBeamEnergy = 10.6;
   double _Q2min = -999;
   double _Q2max = 999;
@@ -75,8 +88,23 @@ class Settings{
   
   // std::vector of Hipo filename strings
   std::vector<std::string> _hipoFileStrings;
+  
+  // std::vector of Emin
+  std::vector<int> _EminPID;
+  std::vector<float> _Emin;
 
-  // std::vector of PIDs which chi2 cut applies
+  // std::vector of Pmin
+  std::vector<int> _PminPID;
+  std::vector<float> _Pmin;
+
+  // std::vector of Vzmin and Vzmax
+  std::vector<int> _VzPID;
+  std::vector<float> _Vzmin;
+  std::vector<float> _Vzmax;
+
+  // std::vector of chi2max
   std::vector<int> _chi2PID;
+  std::vector<float> _chi2max;
+
 };
 #endif

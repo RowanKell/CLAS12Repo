@@ -11,6 +11,7 @@ bool Settings::doMC() const {return _doMC;}
 bool Settings::doReco() const {return _doReco;}
 bool Settings::connectMC2Reco() const {return _connectMC2Reco;}
 bool Settings::ignoreOtherRecoParticles() const {return _ignoreOtherRecoParticles;}
+Settings::eventRecoMethod Settings::getEventRecoMethod() const {return _eventRecoMethod;}
 double Settings::electronBeamEnergy() const {return _electronBeamEnergy;}
 double Settings::Q2min() const {return _Q2min;}
 double Settings::Q2max() const {return _Q2max;}
@@ -18,7 +19,7 @@ double Settings::Wmin() const {return _Wmin;}
 double Settings::Wmax() const {return _Wmax;}
 double Settings::ymin() const {return _ymin;}
 double Settings::ymax() const {return _ymax;}
-double Settings::abschi2pidmax() const {return _abschi2pidmax;}
+
 void Settings::setdoMC(bool b){
   _doMC = b;
   return;
@@ -36,6 +37,11 @@ void Settings::setconnectMC2Reco(bool b){
 
 void Settings::setignoreOtherRecoParticles(bool b){
   _ignoreOtherRecoParticles = b;
+  return;
+}
+
+void Settings::setEventRecoMethod(eventRecoMethod eRM){
+  _eventRecoMethod = eRM;
   return;
 }
 
@@ -62,10 +68,7 @@ void Settings::setyrange(double ymin, double ymax) {
   return;
 }
 
-void Settings::setabschi2pidmax(double abschi2pidmax) {
-  _abschi2pidmax = abschi2pidmax;
-  return;
-}
+
 void Settings::addFinalState(int pid, int n, bool exact=false) {
   // Make sure pid isn't a duplicate
   if(std::count(_fPID.begin(), _fPID.end(), pid)){
@@ -88,8 +91,27 @@ void Settings::addHipoFile(std::string filename){
   _hipoFileStrings.push_back(filename);
 }
 
-void Settings::addPIDforChi2(int pid){
+void Settings::addPIDforEmin(int pid, double Emin){
+  _EminPID.push_back(pid);
+  _Emin.push_back(Emin);
+}
+
+void Settings::addPIDforPmin(int pid, double Pmin){
+  _PminPID.push_back(pid);
+  _Pmin.push_back(Pmin);
+}
+
+void Settings::addPIDforVzrange(int pid, double Vzmin, double Vzmax) {
+  _VzPID.push_back(pid);
+  _Vzmin.push_back(Vzmin);
+  _Vzmax.push_back(Vzmax);
+  return;
+}
+
+void Settings::addPIDforChi2max(int pid, double chi2max){
   _chi2PID.push_back(pid);
+  _chi2max.push_back(chi2max);
+  return;
 }
 
 std::vector<int> Settings::getFinalStatePIDs(){ return _fPID; }
@@ -113,6 +135,54 @@ bool Settings::isExact_fromPID(int pid){
   return false;
 }
 
+double Settings::getEmin_fromPID(int pid){
+ for(unsigned int idx = 0 ; idx < _EminPID.size() ; idx++)
+   {
+     if(_EminPID.at(idx)==pid)
+       return _Emin.at(idx);
+   }
+ return 0;
+} 
+
+double Settings::getPmin_fromPID(int pid){
+ for(unsigned int idx = 0 ; idx < _PminPID.size() ; idx++)
+   {
+     if(_PminPID.at(idx)==pid)
+       return _Pmin.at(idx);
+   }
+ return 0;
+} 
+
+
+double Settings::getVzmin_fromPID(int pid){
+ for(unsigned int idx = 0 ; idx < _VzPID.size() ; idx++)
+   {
+     if(_VzPID.at(idx)==pid)
+       return _Vzmin.at(idx);
+   }
+ return -99999;
+} 
+
+double Settings::getVzmax_fromPID(int pid){
+ for(unsigned int idx = 0 ; idx < _VzPID.size() ; idx++)
+   {
+     if(_VzPID.at(idx)==pid)
+       return _Vzmax.at(idx);
+   }
+ return 99999;
+} 
+
+double Settings::getChi2max_fromPID(int pid){
+ for(unsigned int idx = 0 ; idx < _chi2PID.size() ; idx++)
+   {
+     if(_chi2PID.at(idx)==pid)
+       return _chi2max.at(idx);
+   }
+ return 99999;
+} 
+
+
+
 std::vector<std::string> Settings::hipoFileStrings() {return _hipoFileStrings;}
 
 bool Settings::needsChi2PidCut(int pid){
@@ -123,3 +193,4 @@ bool Settings::needsChi2PidCut(int pid){
     }
   return false;
 }
+
