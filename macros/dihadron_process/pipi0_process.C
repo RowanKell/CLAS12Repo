@@ -10,7 +10,9 @@ R__LOAD_LIBRARY(libclas12ana.so)
 using namespace std;
 
 int pipi0_process(
-			const char * outputFile = "/work/clas12/users/gmat/CLAS12Analysis/data/raw/test.root"
+		  //const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/clasdis/fall2018/torus-1/v1/bkg45nA_10604MeV/45nA_job_3301_3.hipo",
+		  const char * hipoFile = "/w/hallb-scshelf2102/clas12/users/gmat/CLAS12Analysis/data/raw/sample/Out_DIS_pass1_915_920.hipo_skim23.hipo",
+		  const char * outputFile = "/work/clas12/users/gmat/CLAS12Analysis/data/raw/test.root"
 		  )
 {
   //---------------
@@ -41,16 +43,16 @@ int pipi0_process(
 
   settings.addPIDforEmin(22,0.6);     // Gammas must have minimum energy of 0.6 GeV
   settings.addPIDforPmin(211,1.25);   // Pi+ must have minimum momentum of 1.25 GeV
-  settings.addPIDforVzrange(11,-13,12); // e- must have vertex 'z' between [-13,12] cm
+  settings.addPIDforVzrange(11,-8,3); // e- must have vertex 'z' between [-13,12] cm
+  settings.addPIDforBetarange(22,0.9,1.1); // e- must have vertex 'z' between [-13,12] cm
   settings.addPIDforChi2max(211,3);        // Pi+ must have abs(chi2pid) < 3 
 
-  settings.setdoMC(true);             // Analyze MC::Lund
+  settings.setdoMC(false);             // Analyze MC::Lund
   settings.setdoReco(true);           // Analyze REC::Particle
-  settings.setconnectMC2Reco(true);   // Connect pindex of REC::Particle to pindex of MC::Lund
+  settings.setdoPostProcess(true);    // Apply further cuts
+  settings.setconnectMC2Reco(false);   // Connect pindex of REC::Particle to pindex of MC::Lund
   settings.setEventRecoMethod(Settings::eventRecoMethod::useLargestPinFD);
-  std::string dirname = "/w/hallb-scshelf2102/clas12/users/gmat/CLAS12Analysis/data/raw/sample/";
-  settings.addHipoFile(dirname+std::string("Out_DIS_pass1_915_920.hipo_skim23.hipo"));
-  //settings.addHipoFile("/cache/clas12/rg-a/production/montecarlo/clasdis/fall2018/torus-1/v1/bkg45nA_10604MeV/45nA_job_3301_3.hipo");
+  settings.addHipoFile(hipoFile);
   //-----------------------------------
   // Import Settings into Processing Framework
   //-----------------------------------
@@ -63,6 +65,10 @@ int pipi0_process(
   // Process all events
   //-----------------------------------
   ana->process_events();
+  //-----------------------------------
+  // Perform post-processing
+  //-----------------------------------
+  ana->PostProcessReco();
   //-----------------------------------
   // End processing
   //-----------------------------------

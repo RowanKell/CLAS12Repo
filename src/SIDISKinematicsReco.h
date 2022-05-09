@@ -14,6 +14,7 @@
 /* ROOT includes */
 #include <TFile.h>
 #include <TTree.h>
+#include <TLorentzVector.h>
 /* CLAS12 includes */
 #include "HipoChain.h"
 #include "clas12reader.h"
@@ -39,6 +40,8 @@ class SIDISKinematicsReco{
 
   int process_events();
 
+  int PostProcessReco();
+  
   int End();
   
   void set_beam(double E){
@@ -52,6 +55,9 @@ class SIDISKinematicsReco{
   void set_printFrequency(int j){
     _printEvery = j;
   }
+
+ protected:
+  std::vector<int> eventPIDs;
 
  private:
  
@@ -73,6 +79,7 @@ class SIDISKinematicsReco{
   TFile *_tfile;
   TTree *_tree_MC;
   TTree *_tree_Reco;
+  TTree *_tree_PostProcess;
 
   double _electron_beam_energy;
 

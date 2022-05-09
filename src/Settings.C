@@ -9,6 +9,7 @@ Settings::Settings()
 
 bool Settings::doMC() const {return _doMC;}
 bool Settings::doReco() const {return _doReco;}
+bool Settings::doPostProcess() const {return _doPostProcess;}
 bool Settings::connectMC2Reco() const {return _connectMC2Reco;}
 bool Settings::ignoreOtherRecoParticles() const {return _ignoreOtherRecoParticles;}
 Settings::eventRecoMethod Settings::getEventRecoMethod() const {return _eventRecoMethod;}
@@ -27,6 +28,11 @@ void Settings::setdoMC(bool b){
 
 void Settings::setdoReco(bool b){
   _doReco = b;
+  return;
+}
+
+void Settings::setdoPostProcess(bool b){
+  _doPostProcess = b;
   return;
 }
 
@@ -108,6 +114,13 @@ void Settings::addPIDforVzrange(int pid, double Vzmin, double Vzmax) {
   return;
 }
 
+void Settings::addPIDforBetarange(int pid, double Betamin, double Betamax) {
+  _BetaPID.push_back(pid);
+  _Betamin.push_back(Betamin);
+  _Betamax.push_back(Betamax);
+  return;
+}
+
 void Settings::addPIDforChi2max(int pid, double chi2max){
   _chi2PID.push_back(pid);
   _chi2max.push_back(chi2max);
@@ -168,6 +181,24 @@ double Settings::getVzmax_fromPID(int pid){
    {
      if(_VzPID.at(idx)==pid)
        return _Vzmax.at(idx);
+   }
+ return 99999;
+} 
+
+double Settings::getBetamin_fromPID(int pid){
+ for(unsigned int idx = 0 ; idx < _BetaPID.size() ; idx++)
+   {
+     if(_BetaPID.at(idx)==pid)
+       return _Betamin.at(idx);
+   }
+ return -99999;
+} 
+
+double Settings::getBetamax_fromPID(int pid){
+ for(unsigned int idx = 0 ; idx < _BetaPID.size() ; idx++)
+   {
+     if(_BetaPID.at(idx)==pid)
+       return _Betamax.at(idx);
    }
  return 99999;
 } 
