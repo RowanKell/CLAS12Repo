@@ -51,6 +51,7 @@ int SIDISKinematicsReco::Init()
   _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_pt , vdummy) );
   _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_p , vdummy) );
   _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_E , vdummy) );
+  _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_evtgen_E , vdummy) );
   _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_theta , vdummy) );
   _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_eta , vdummy) );
   _map_particle.insert( make_pair( SIDISParticle::PROPERTY::part_phi , vdummy) );
@@ -151,7 +152,6 @@ int SIDISKinematicsReco::process_events()
   
   // Move to the next event in the Hipo chain
   while(_chain.Next()==true){
-
     if(_verbosity > 0 && (_ievent)%_printEvery==0 && _ievent!=0){
       std::cout << _ievent << " events completed | " << _tree_Reco->GetEntriesFast() << " passed cuts --> " << _tree_Reco->GetEntriesFast()*100.0/_ievent << "%" << std::endl;
     }
@@ -275,6 +275,7 @@ int SIDISKinematicsReco::CollectParticlesFromTruth(const std::unique_ptr<clas12:
     sp->set_property( SIDISParticle::part_pt,  pt);
     sp->set_property( SIDISParticle::part_p,  p);
     sp->set_property( SIDISParticle::part_E,   E);
+    sp->set_property( SIDISParticle::part_evtgen_E,   E);
     sp->set_property( SIDISParticle::part_theta,   theta);
     sp->set_property( SIDISParticle::part_eta,   eta);
     sp->set_property( SIDISParticle::part_phi,   phi);
@@ -331,7 +332,7 @@ int SIDISKinematicsReco::CollectParticlesFromReco(const std::unique_ptr<clas12::
 
     // CUT beta -------------------------------------------------------------
     // Skip over particles that both need a beta cut, and do not satisfy it
-    if(abs(beta) > _settings.getBetamax_fromPID(pid))
+    if(abs(beta) > _settings.getBetamax_fromPID(pid) || abs(beta) < _settings.getBetamin_fromPID(pid))
       {
 	// Skip event if this lone particle NEEDED to pass the cut
 	if(_settings.getN_fromPID(pid)==1 && _settings.isExact_fromPID(pid))
@@ -394,6 +395,7 @@ int SIDISKinematicsReco::CollectParticlesFromReco(const std::unique_ptr<clas12::
     sp->set_property( SIDISParticle::part_pt,  pt);
     sp->set_property( SIDISParticle::part_p,  p);
     sp->set_property( SIDISParticle::part_E,   E);
+    sp->set_property( SIDISParticle::part_evtgen_E,  -999);
     sp->set_property( SIDISParticle::part_theta,   theta);
     sp->set_property( SIDISParticle::part_eta,   eta);
     sp->set_property( SIDISParticle::part_phi,   phi);
@@ -421,21 +423,23 @@ int SIDISKinematicsReco::ConnectTruth2Reco( type_map_part& particleMap,
 
     double reco_theta = (it_reco->second)->get_property_float(SIDISParticle::part_theta); 
     double reco_phi = (it_reco->second)->get_property_float(SIDISParticle::part_phi); 
-    
+    //    double reco_E = (it_reco->second)->get_property_float(SIDISParticle::part_E);
       /* Loop over all MC particles */
       for(type_map_part::iterator it_mc = particleMap.begin(); it_mc!= particleMap.end(); ++it_mc){
 	double mc_theta = (it_mc->second)->get_property_float(SIDISParticle::part_theta); 
 	double mc_phi = (it_mc->second)->get_property_float(SIDISParticle::part_phi); 
-
+	//	double mc_E = (it_reco->second)->get_property_float(SIDISParticle::part_E);
 	/* Match the *theta* and *phi* of two particles. For details, see https://www.jlab.org/Hall-B/general/thesis/THayward_thesis.pdf */
 	double dth = abs(reco_theta-mc_theta);
 	double dphi = abs(reco_phi-mc_phi);
-	
+	//	double dE = abs(reco_E - mc_E);
+
 	if( (dth < 6*degtorad) && 
 	    (dphi < 2*degtorad || abs(dphi - 2*PI) < 2*degtorad)){
 	  (it_mc->second)->set_property( SIDISParticle::part_pindex, (it_reco->second)->get_property_int(SIDISParticle::part_pindex));
 	  (it_reco->second)->set_property( SIDISParticle::part_parentID , (it_mc->second)->get_property_int(SIDISParticle::part_parentID));
 	  (it_reco->second)->set_property( SIDISParticle::part_parentPID , (it_mc->second)->get_property_int(SIDISParticle::part_parentPID));
+	  (it_reco->second)->set_property( SIDISParticle::part_evtgen_E , (it_mc->second)->get_property_float(SIDISParticle::part_evtgen_E));
 	}
       }
   }
@@ -603,174 +607,16 @@ int SIDISKinematicsReco::PostProcessReco()
   std::cout << "----------------------------------------" << std::endl;
  
   _tree_PostProcess = new TTree("tree_postprocess","Tree created after all hipo events are filtered");
+
+  _postprocess.Init(_tree_Reco,_electron_beam_energy);
   
-  std::vector<float> Mgg;
-  _tree_PostProcess->Branch("Mdiphoton",&Mgg);
-
-  // Declaration of leaf types                                                                                                                                                Int_t           event_truth;
-  Float_t         Q2;
-  Float_t         W;
-  Float_t         nParticles;
-  Float_t         nPhotons;
-  Float_t         nu;
-  Float_t         x;
-  Float_t         y;
-  vector<float>   *pid;
-  vector<float>   *px;
-  vector<float>   *py;
-  vector<float>   *pz;
-  vector<float>   *pt;
-  vector<float>   *p;
-  vector<float>   *E;
-  vector<float>   *theta;
-  vector<float>   *eta;
-  vector<float>   *phi;
-  vector<float>   *vz;
-  vector<float>   *pindex;
-  vector<float>   *beta;
-  vector<float>   *chi2;
-  vector<float>   *parentID;
-  vector<float>   *parentPID; // Declaration of leaf types                                                                                                                    
-  // List of branches      
-  // TBranch        *b_event;                                                                                                                  
-  TBranch        *b_Q2;        
-  TBranch        *b_W;
-  TBranch        *b_nParticles; 
-  TBranch        *b_nPhotons; 
-  TBranch        *b_nu; 
-  TBranch        *b_x;
-  TBranch        *b_y;
-  TBranch        *b_pid;
-  TBranch        *b_px;
-  TBranch        *b_py;
-  TBranch        *b_pz;
-  TBranch        *b_pt;
-  TBranch        *b_p; 
-  TBranch        *b_E;                                                                                                                                                    
-  TBranch        *b_theta;
-  TBranch        *b_eta;
-  TBranch        *b_phi; 
-  TBranch        *b_vz;
-  TBranch        *b_pindex;
-  TBranch        *b_beta;   
-  TBranch        *b_chi2;
-  TBranch        *b_parentID;
-  TBranch        *b_parentPID;
-
-  // Set object pointer
-  pid = 0;
-  px = 0;
-  py = 0;
-  pz = 0;
-  pt = 0;
-  p = 0;
-  E = 0;
-  theta = 0;
-  eta = 0;
-  phi = 0;
-  vz = 0;
-  pindex = 0;
-  beta = 0;
-  chi2 = 0;
-  parentID = 0;
-  parentPID = 0;
-
-  _tree_Reco->SetBranchAddress("Q2", &Q2, &b_Q2);
-  _tree_Reco->SetBranchAddress("W", &W, &b_W);
-  _tree_Reco->SetBranchAddress("nParticles", &nParticles, &b_nParticles);
-  _tree_Reco->SetBranchAddress("nPhotons", &nPhotons, &b_nPhotons);
-  _tree_Reco->SetBranchAddress("nu", &nu, &b_nu);
-  _tree_Reco->SetBranchAddress("x", &x, &b_x);
-  _tree_Reco->SetBranchAddress("y", &y, &b_y);
-  _tree_Reco->SetBranchAddress("pid", &pid, &b_pid);
-  _tree_Reco->SetBranchAddress("px", &px, &b_px);
-  _tree_Reco->SetBranchAddress("py", &py, &b_py);
-  _tree_Reco->SetBranchAddress("pz", &pz, &b_pz);
-  _tree_Reco->SetBranchAddress("pt", &pt, &b_pt);
-  _tree_Reco->SetBranchAddress("p", &p, &b_p);
-  _tree_Reco->SetBranchAddress("E", &E, &b_E);
-  _tree_Reco->SetBranchAddress("theta", &theta, &b_theta);
-  _tree_Reco->SetBranchAddress("eta", &eta, &b_eta);
-  _tree_Reco->SetBranchAddress("phi", &phi, &b_phi);
-  _tree_Reco->SetBranchAddress("vz", &vz, &b_vz);
-  _tree_Reco->SetBranchAddress("pindex", &pindex, &b_pindex);
-  _tree_Reco->SetBranchAddress("beta", &beta, &b_beta);
-  _tree_Reco->SetBranchAddress("chi2", &chi2, &b_chi2);
-  _tree_Reco->SetBranchAddress("parentID", &parentID, &b_parentID);
-  _tree_Reco->SetBranchAddress("parentPID", &parentPID, &b_parentPID);
-
-  Long64_t nentries = _tree_Reco->GetEntriesFast();
+  if(_postprocess.setPostProcessMethod(_settings.postProcessMethod())!=0)
+    return -1;
   
-  TLorentzVector init_electron;
-  init_electron.SetPxPyPzE(0,0,sqrt(_electron_beam_energy*_electron_beam_energy - electronMass * electronMass),_electron_beam_energy);
+  // This line is quite the mouthful...
+  _postprocess.Process(_tree_PostProcess);
 
-  TLorentzVector electron;
-  TLorentzVector q;
-  TLorentzVector piplus;
-  TLorentzVector pi0;
-  TLorentzVector gamma1;
-  TLorentzVector gamma2;
-
-  double vz_electron = 0.0;
-  double vz_piplus = 0.0;
-  double vz_pi0 = 0.0;
-
-  double xF_piplus = 0.0;
-  double xF_pi0 = 0.0;
-  double zpair = 0.0;
-
-  Long64_t nbytes = 0, nb = 0;
-  for (Long64_t jentry=0; jentry<nentries;jentry++) {
-    //    Long64_t ientry = LoadTree(jentry);
-    //    if (ientry < 0) break;
-    nb = _tree_Reco->GetEntry(jentry);   nbytes += nb;
-    
-    Mgg.clear();
-
-    for(unsigned int i = 0 ; i < pid->size() ; i++){
-      // Identify the scattered electron
-      if(pid->at(i)==11){
-	electron.SetPxPyPzE(px->at(i),py->at(i),pz->at(i),E->at(i));
-	vz_electron=vz->at(i);
-      }
-      if(pid->at(i)==211){
-	piplus.SetPxPyPzE(px->at(i),py->at(i),pz->at(i),E->at(i));
-	vz_piplus=vz->at(i);      
-      }
-    }
-    // Set virtual photon
-    q = init_electron - electron;
-    
-    // Get xF of Pi+
-    xF_piplus=2*(piplus*q)/(q.P()*W);
-
-    // Next, identify pairs of photons
-    for(unsigned int i = 0 ; i < pid->size() ; i++){
-      if(pid->at(i)==22){
-	for(unsigned int j = i+1 ; j < pid->size() ; j++){
-	  if(pid->at(j)==22){
-	    gamma1.SetPxPyPzE(px->at(i),py->at(i),pz->at(i),E->at(i));
-	    gamma2.SetPxPyPzE(px->at(j),py->at(j),pz->at(j),E->at(j));
-	    pi0=gamma1+gamma2;
-	    vz_pi0=(vz->at(i)+vz->at(j))/2.0;
-	    xF_pi0=2*(pi0*q)/(q.P()*W);
-	    zpair=(piplus.E()+pi0.E())/(nu);
-	    if(gamma1.Angle(electron.Vect())>8*PI/180.0 &&
-	       gamma2.Angle(electron.Vect())>8*PI/180.0 &&
-	       xF_piplus>0 && xF_pi0>0 &&
-	       zpair<0.95 &&
-	       abs(vz_electron-vz_piplus)<20 && abs(vz_electron-vz_pi0)<20){
-	      
-	      
-	      // All cuts are addressed, now appended interesting quantities
-	      Mgg.push_back((gamma1+gamma2).M());
-	    }
-	  }
-	}
-      }
-    }
-    _tree_PostProcess->Fill();
-  }
+  
   return 0;
 }
 

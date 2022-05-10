@@ -13,6 +13,7 @@ bool Settings::doPostProcess() const {return _doPostProcess;}
 bool Settings::connectMC2Reco() const {return _connectMC2Reco;}
 bool Settings::ignoreOtherRecoParticles() const {return _ignoreOtherRecoParticles;}
 Settings::eventRecoMethod Settings::getEventRecoMethod() const {return _eventRecoMethod;}
+const char * Settings::postProcessMethod() const {return _postProcessMethod;}
 double Settings::electronBeamEnergy() const {return _electronBeamEnergy;}
 double Settings::Q2min() const {return _Q2min;}
 double Settings::Q2max() const {return _Q2max;}
@@ -51,6 +52,10 @@ void Settings::setEventRecoMethod(eventRecoMethod eRM){
   return;
 }
 
+void Settings::setPostProcessMethod(const char * method){
+  _postProcessMethod = method;
+  return;
+}
 void Settings::setElectronBeamEnergy(double E){
   _electronBeamEnergy = E;
   return;

@@ -22,6 +22,8 @@ std::pair<const std::string, SIDISParticle::PROPERTY_TYPE> SIDISParticle::get_pr
       return std::make_pair("p", SIDISParticle::type_float);
     case part_E:
       return std::make_pair("E", SIDISParticle::type_float);
+    case part_evtgen_E:
+      return std::make_pair("evtgen_E", SIDISParticle::type_float);
     case part_theta:
       return std::make_pair("theta", SIDISParticle::type_float);
     case part_eta:

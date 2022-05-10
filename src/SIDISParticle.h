@@ -27,9 +27,10 @@ class SIDISParticle
     part_pt  = 14,
     part_p   = 15,
     part_E   = 16,
-    part_theta = 17,
-    part_eta   = 18,
-    part_phi   = 19,
+    part_evtgen_E = 17,
+    part_theta = 18,
+    part_eta   = 19,
+    part_phi   = 20,
 
     part_vz   = 30,
     

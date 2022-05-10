@@ -11,6 +11,7 @@
 #include "Kinematics.h"
 #include "SIDISParticle.h"
 #include "SIDISParticlev1.h"
+#include "PostProcess.h"
 /* ROOT includes */
 #include <TFile.h>
 #include <TTree.h>
@@ -66,6 +67,7 @@ class SIDISKinematicsReco{
   int _printEvery = 100000;
   Settings _settings;
   Kinematics _kin;
+  PostProcess _postprocess;
 
   int _idx_RECKin;
   int _ix;
