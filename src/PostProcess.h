@@ -57,6 +57,7 @@ class PostProcess{
   int pipi0(TTree *);
   int pipi0_MC(TTree *);
   
+  void set_electron_beam_energy(double E){ _electron_beam_energy = E; }
 
   // private:
   Float_t         Q2;
@@ -66,6 +67,7 @@ class PostProcess{
   Float_t         nu;
   Float_t         x;
   Float_t         y;
+  Float_t         helicity;
   vector<float>   *pid=0;
   vector<float>   *px=0;
   vector<float>   *py=0;
@@ -90,6 +92,7 @@ class PostProcess{
   TBranch        *b_nu; 
   TBranch        *b_x;
   TBranch        *b_y;
+  TBranch        *b_helicity;
   TBranch        *b_pid;
   TBranch        *b_px;
   TBranch        *b_py;

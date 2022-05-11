@@ -41,6 +41,7 @@ int SIDISKinematicsReco::Init()
   _map_event.insert( make_pair( "Q2" , dummy ) );
   _map_event.insert( make_pair( "W" , dummy ) );
   _map_event.insert( make_pair( "nu" , dummy ) );
+  _map_event.insert( make_pair( "helicity" , dummy ) );
   
   // Create particle map 
   // -------------------------  
@@ -212,6 +213,9 @@ int SIDISKinematicsReco::process_events()
 
 	/* fill reco tree */
        	_tree_Reco->Fill();
+
+	/* Free up memory taken by elements of the map */
+	DeleteParticlePointers( recoparticleMap );
       }
     if(_settings.doMC())
       {
@@ -225,6 +229,9 @@ int SIDISKinematicsReco::process_events()
 	
 	/* Fill MC tree */
 	_tree_MC->Fill();
+
+	/* Free up memory taken by elements of the map */
+	DeleteParticlePointers( particleMap );
       }
     
   }
@@ -545,11 +552,15 @@ int SIDISKinematicsReco::AddRecoEventInfo(const std::unique_ptr<clas12::clas12re
   else if(reco_Q2 < _settings.Q2min() || reco_Q2 > _settings.Q2max())
     return -1;
   else{
+
+
     (_map_event.find("x"))->second = reco_x; 
     (_map_event.find("Q2"))->second = reco_Q2;
     (_map_event.find("y"))->second = reco_y;
     (_map_event.find("nu"))->second = reco_nu;
     (_map_event.find("W"))->second = reco_W;
+    auto event = _c12->event();
+    (_map_event.find("helicity"))->second = -event->getHelicity();
   }
   
   return 0;
@@ -593,11 +604,21 @@ void SIDISKinematicsReco::ResetBranchMap()
   // Particle branch
   for(map<SIDISParticle::PROPERTY , std::vector<float>>::iterator it = _map_particle.begin(); it!=_map_particle.end(); ++it)
     {
+      
       (it->second).clear();
     }
   return;
 }
 
+void SIDISKinematicsReco::DeleteParticlePointers(type_map_part& particleMap)
+{
+  // Loop of particle map
+  for(type_map_part::iterator it = particleMap.begin(); it!=particleMap.end();++it)
+    {
+      delete (it->second);
+    }   
+  return;
+}
 
 int SIDISKinematicsReco::PostProcessReco()
 {

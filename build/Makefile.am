@@ -29,6 +29,7 @@ pkginclude_HEADERS = \
   ../src/SIDISKinematicsReco.h \
   ../src/SIDISParticle.h \
   ../src/Constants.h \
+  ../src/PostProcess.h \
   ../src/SIDISParticlev1.h
 
 libclas12ana_la_SOURCES = \
@@ -36,6 +37,7 @@ libclas12ana_la_SOURCES = \
   ../src/Settings.C \
   ../src/SIDISKinematicsReco.C \
   ../src/SIDISParticle.C \
+  ../src/PostProcess.C \
   ../src/SIDISParticlev1.C
 
 %_Dict.C: ../src/%.h ../src/%LinkDef.h

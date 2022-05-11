@@ -114,6 +114,9 @@ class SIDISKinematicsReco{
   /* Reset branch maps for each event */
   void ResetBranchMap();
 
+  /* Frees up pointers from SIDISParticle for each event */
+  void DeleteParticlePointers(type_map_part&);
+
   /* Clas12root objects */
   clas12root::HipoChain _chain;
   clas12::clas12reader *_config_c12{nullptr};
