@@ -175,11 +175,18 @@ int PostProcess::pipi0_MC(TTree * _tree_postprocess){
   std::vector<float> Mgg;
   std::vector<float> E1;
   std::vector<float> E2;
-  std::vector<int>   flag;
-  
+  std::vector<float> Mdihadron;
+  std::vector<float> beta1;
+  std::vector<float> beta2;
+  std::vector<int> flag;
+
   _tree_postprocess->Branch("Mdiphoton",&Mgg);
   _tree_postprocess->Branch("E1",&E1);
   _tree_postprocess->Branch("E2",&E2);
+  _tree_postprocess->Branch("Mdihadron",&Mdihadron);
+  _tree_postprocess->Branch("beta1",&beta1);
+  _tree_postprocess->Branch("beta2",&beta2);
+  _tree_postprocess->Branch("helicity",&helicity);
   _tree_postprocess->Branch("flag",&flag);
 
   TLorentzVector init_electron;
@@ -193,6 +200,7 @@ int PostProcess::pipi0_MC(TTree * _tree_postprocess){
   TLorentzVector pi0;
   TLorentzVector gamma1;
   TLorentzVector gamma2;
+  TLorentzVector dihadron;
 
   double vz_electron = 0.0;
   double vz_pi = 0.0;
@@ -208,10 +216,13 @@ int PostProcess::pipi0_MC(TTree * _tree_postprocess){
   Long64_t nbytes = 0, nb = 0;
   for (Long64_t jentry=0; jentry<_nentries;jentry++) {
     nb = _tree_Reco->GetEntry(jentry);   nbytes += nb;
-    
+
     Mgg.clear();
     E1.clear();
     E2.clear();
+    Mdihadron.clear();
+    beta1.clear();
+    beta2.clear();
     flag.clear();
 
     for(unsigned int i = 0 ; i < pid->size() ; i++){
@@ -257,11 +268,14 @@ int PostProcess::pipi0_MC(TTree * _tree_postprocess){
 	              zpair<0.95 &&
 	       abs(vz_electron-vz_pi)<20 && abs(vz_electron-vz_pi0)<20){
 	            
-	            
+	      dihadron = pi0+pi;
 	      // All cuts are addressed, now appended interesting quantities
 	      Mgg.push_back((gamma1+gamma2).M());
 	      E1.push_back(gamma1.E());
 	      E2.push_back(gamma2.E());
+	      Mdihadron.push_back(dihadron.M());
+	      beta1.push_back(beta->at(i));
+	      beta2.push_back(beta->at(j));	            
 	      if(parentID->at(i)==parentID->at(j) && parentPID->at(i)==111)
 		flag.push_back(1);
 	      else
