@@ -7,6 +7,8 @@
 #include <fstream>
 #include "Constants.h"
 #include <math.h>
+#include "Kinematics.h"
+
 using namespace std;
 class PostProcess{
 
@@ -63,11 +65,11 @@ class PostProcess{
   Float_t         Q2;
   Float_t         W;
   Float_t         nParticles;
-  Float_t         nPhotons;
   Float_t         nu;
   Float_t         x;
   Float_t         y;
   Float_t         helicity;
+  //  Float_t         charge;
   vector<float>   *pid=0;
   vector<float>   *px=0;
   vector<float>   *py=0;
@@ -88,11 +90,11 @@ class PostProcess{
   TBranch        *b_Q2;        
   TBranch        *b_W;
   TBranch        *b_nParticles; 
-  TBranch        *b_nPhotons; 
   TBranch        *b_nu; 
   TBranch        *b_x;
   TBranch        *b_y;
   TBranch        *b_helicity;
+  //  TBranch        *b_charge;
   TBranch        *b_pid;
   TBranch        *b_px;
   TBranch        *b_py;
@@ -118,5 +120,7 @@ class PostProcess{
   PROCESS_ID _process_id;
 
   double _electron_beam_energy;
+
+  Kinematics _kin;
 };
 #endif

@@ -35,13 +35,13 @@ int SIDISKinematicsReco::Init()
   std::vector<float> vdummy;
 
   _map_event.insert( make_pair( "nParticles" , dummy ) );
-  _map_event.insert( make_pair( "nPhotons" , dummy ) );
   _map_event.insert( make_pair( "x" , dummy ) );
   _map_event.insert( make_pair( "y" , dummy ) );
   _map_event.insert( make_pair( "Q2" , dummy ) );
   _map_event.insert( make_pair( "W" , dummy ) );
   _map_event.insert( make_pair( "nu" , dummy ) );
   _map_event.insert( make_pair( "helicity" , dummy ) );
+  //  _map_event.insert( make_pair( "charge" , dummy ) );
   
   // Create particle map 
   // -------------------------  
@@ -133,6 +133,7 @@ int SIDISKinematicsReco::InitHipo()
   }
 
   // -----------------------------------------------------
+  // -----------------------------------------------------
   // Add banks to the _config_c12 object
   // -----------------------------------------------------
   if(_settings.getEventRecoMethod() == Settings::eventRecoMethod::useRecKinematicsBank){
@@ -150,6 +151,11 @@ int SIDISKinematicsReco::process_events()
   // Establish CLAS12 event parser
   // -------------------------
   auto &_c12= _chain.C12ref();
+
+  // Create Fiducial Cuts Object
+  // -----------------------------------------------------
+  if(_settings.doFiducialCuts())
+    _fiducial = FiducialCuts(_c12);
   
   // Move to the next event in the Hipo chain
   while(_chain.Next()==true){
@@ -392,6 +398,13 @@ int SIDISKinematicsReco::CollectParticlesFromReco(const std::unique_ptr<clas12::
 	  continue;
       }
 
+    // CUT Fiducial -------------------------------------------------------------
+    // Skip over particles that do not satisfy Fiducial Cuts
+    if(_settings.doFiducialCuts()){
+      if(_fiducial.FidCutParticle(_c12,pid,pindex,theta) == false)
+	continue;
+    }
+    
     SIDISParticlev1 *sp = new SIDISParticlev1();
     sp->set_candidate_id( pindex );
     
@@ -487,7 +500,7 @@ int SIDISKinematicsReco::AddTruthEventInfo(const std::unique_ptr<clas12::clas12r
       (_map_event.find("y"))->second = y;
       (_map_event.find("nu"))->second = nu;
       (_map_event.find("W"))->second = W;
-
+      //      (_map_event.find("charge"))->second = _c12->getRunBeamCharge();
       break;
     }
   }
@@ -561,6 +574,7 @@ int SIDISKinematicsReco::AddRecoEventInfo(const std::unique_ptr<clas12::clas12re
     (_map_event.find("W"))->second = reco_W;
     auto event = _c12->event();
     (_map_event.find("helicity"))->second = -event->getHelicity();
+    //    (_map_event.find("charge"))->second = _c12->getRunBeamCharge();
   }
   
   return 0;

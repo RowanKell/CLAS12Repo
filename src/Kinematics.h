@@ -2,7 +2,8 @@
 #define Kinematics_h
 
 #include "Constants.h"
-//#include "TLorentzVector.h"
+#include "TLorentzVector.h"
+#include "TVector3.h"
 
 class Kinematics {
  public:
@@ -21,7 +22,8 @@ class Kinematics {
   static double th(double Pt, double Pz);
   static double eta(double th);
   static double phi(double Px, double Py);
-  
-  
+  static double phi_h(TLorentzVector,TLorentzVector,TLorentzVector,TLorentzVector);
+  static double phi_R(TLorentzVector,TLorentzVector,TLorentzVector,TLorentzVector);
+  static double com_th(TLorentzVector, TLorentzVector);
 };
 #endif

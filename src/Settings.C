@@ -9,6 +9,7 @@ Settings::Settings()
 
 bool Settings::doMC() const {return _doMC;}
 bool Settings::doReco() const {return _doReco;}
+bool Settings::doFiducialCuts() const {return _doFiducialCuts;}
 bool Settings::doPostProcess() const {return _doPostProcess;}
 bool Settings::connectMC2Reco() const {return _connectMC2Reco;}
 bool Settings::ignoreOtherRecoParticles() const {return _ignoreOtherRecoParticles;}
@@ -29,6 +30,11 @@ void Settings::setdoMC(bool b){
 
 void Settings::setdoReco(bool b){
   _doReco = b;
+  return;
+}
+
+void Settings::setdoFiducialCuts(bool b){
+  _doFiducialCuts = b;
   return;
 }
 

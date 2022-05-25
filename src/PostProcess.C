@@ -7,11 +7,11 @@ int PostProcess::Init(TTree * tree_Reco, double eBeam)
   _tree_Reco->SetBranchAddress("Q2", &Q2, &b_Q2);
   _tree_Reco->SetBranchAddress("W", &W, &b_W);
   _tree_Reco->SetBranchAddress("nParticles", &nParticles, &b_nParticles);
-  _tree_Reco->SetBranchAddress("nPhotons", &nPhotons, &b_nPhotons);
   _tree_Reco->SetBranchAddress("nu", &nu, &b_nu);
   _tree_Reco->SetBranchAddress("x", &x, &b_x);
   _tree_Reco->SetBranchAddress("y", &y, &b_y);
   _tree_Reco->SetBranchAddress("helicity", &helicity, &b_helicity);
+  //  _tree_Reco->SetBranchAddress("charge", &charge, &b_charge);
   _tree_Reco->SetBranchAddress("pid", &pid, &b_pid);
   _tree_Reco->SetBranchAddress("px", &px, &b_px);
   _tree_Reco->SetBranchAddress("py", &py, &b_py);
@@ -51,13 +51,18 @@ int PostProcess::Process(TTree *_tree_postprocess){
 }
 
 int PostProcess::pipi0(TTree * _tree_postprocess){
-  std::vector<float> Mgg;
-  std::vector<float> E1;
-  std::vector<float> E2;
-  std::vector<float> Mdihadron;
-  std::vector<float> beta1;
-  std::vector<float> beta2;
+  double fid = 0.0;
+  double Mgg;
+  double E1;
+  double E2;
+  double Mdihadron;
+  double beta1;
+  double beta2;
+  double phi_R;
+  double phi_h;
+  double th;
 
+  _tree_postprocess->Branch("fid",&fid);
   _tree_postprocess->Branch("Mdiphoton",&Mgg);
   _tree_postprocess->Branch("E1",&E1);
   _tree_postprocess->Branch("E2",&E2);
@@ -65,7 +70,16 @@ int PostProcess::pipi0(TTree * _tree_postprocess){
   _tree_postprocess->Branch("beta1",&beta1);
   _tree_postprocess->Branch("beta2",&beta2);
   _tree_postprocess->Branch("helicity",&helicity);
-
+  _tree_postprocess->Branch("phi_R",&phi_R);
+  _tree_postprocess->Branch("phi_h",&phi_h);
+  _tree_postprocess->Branch("th",&th);
+  _tree_postprocess->Branch("Q2",&Q2);
+  _tree_postprocess->Branch("W",&W);
+  _tree_postprocess->Branch("nu",&nu);
+  _tree_postprocess->Branch("x",&x);
+  _tree_postprocess->Branch("y",&y);
+  //  _tree_postprocess->Branch("charge",&charge);
+  
   TLorentzVector init_electron;
   init_electron.SetPxPyPzE(0,0,sqrt(_electron_beam_energy*_electron_beam_energy - electronMass * electronMass),_electron_beam_energy);
   TLorentzVector init_target;
@@ -95,12 +109,15 @@ int PostProcess::pipi0(TTree * _tree_postprocess){
 
     nb = _tree_Reco->GetEntry(jentry);   nbytes += nb;
     
-    Mgg.clear();
-    E1.clear();
-    E2.clear();
-    Mdihadron.clear();
-    beta1.clear();
-    beta2.clear();
+    Mgg=0.0;
+    E1=0.0;
+    E2=0.0;
+    Mdihadron=0.0;
+    beta1=0.0;
+    beta2=0.0;
+    phi_h=0.0;
+    phi_R=0.0;
+    th=0.0;
 
     for(unsigned int i = 0 ; i < pid->size() ; i++){
       // Identify the scattered electron
@@ -147,19 +164,22 @@ int PostProcess::pipi0(TTree * _tree_postprocess){
 	            
 	      dihadron = pi0+pi;
 	      // All cuts are addressed, now appended interesting quantities
-	      Mgg.push_back((gamma1+gamma2).M());
-	      E1.push_back(gamma1.E());
-	      E2.push_back(gamma2.E());
-	      Mdihadron.push_back(dihadron.M());
-	      beta1.push_back(beta->at(i));
-	      beta2.push_back(beta->at(j));
+	      Mgg=((gamma1+gamma2).M());
+	      E1=(gamma1.E());
+	      E2=(gamma2.E());
+	      Mdihadron=(dihadron.M());
+	      beta1=(beta->at(i));
+	      beta2=(beta->at(j));
+	      phi_R=(_kin.phi_R(q,init_electron,pi,pi0));
+	      phi_h=(_kin.phi_h(q,init_electron,pi,pi0));
+     	      th = (_kin.com_th(pi,pi0));
+	      _tree_postprocess->Fill();
+	      fid++;
 	    }
 	  }
 	}
       }
     }
-    if(E1.size()>0)
-      _tree_postprocess->Fill();
   }
   return 0;
 }
@@ -172,14 +192,19 @@ int PostProcess::pipi0(TTree * _tree_postprocess){
 
 
 int PostProcess::pipi0_MC(TTree * _tree_postprocess){
-  std::vector<float> Mgg;
-  std::vector<float> E1;
-  std::vector<float> E2;
-  std::vector<float> Mdihadron;
-  std::vector<float> beta1;
-  std::vector<float> beta2;
-  std::vector<int> flag;
+  double fid = 0.0;
+  double Mgg;
+  double E1;
+  double E2;
+  double Mdihadron;
+  double beta1;
+  double beta2;
+  int flag;
+  double phi_h;
+  double phi_R;
+  double th; 
 
+  _tree_postprocess->Branch("fid",&fid);
   _tree_postprocess->Branch("Mdiphoton",&Mgg);
   _tree_postprocess->Branch("E1",&E1);
   _tree_postprocess->Branch("E2",&E2);
@@ -188,6 +213,14 @@ int PostProcess::pipi0_MC(TTree * _tree_postprocess){
   _tree_postprocess->Branch("beta2",&beta2);
   _tree_postprocess->Branch("helicity",&helicity);
   _tree_postprocess->Branch("flag",&flag);
+  _tree_postprocess->Branch("phi_R",&phi_R);
+  _tree_postprocess->Branch("phi_h",&phi_h);
+  _tree_postprocess->Branch("Q2",&Q2);
+  _tree_postprocess->Branch("W",&W);
+  _tree_postprocess->Branch("nu",&nu);
+  _tree_postprocess->Branch("x",&x);
+  _tree_postprocess->Branch("y",&y);
+  _tree_postprocess->Branch("th",&th);
 
   TLorentzVector init_electron;
   init_electron.SetPxPyPzE(0,0,sqrt(_electron_beam_energy*_electron_beam_energy - electronMass * electronMass),_electron_beam_energy);
@@ -217,14 +250,16 @@ int PostProcess::pipi0_MC(TTree * _tree_postprocess){
   for (Long64_t jentry=0; jentry<_nentries;jentry++) {
     nb = _tree_Reco->GetEntry(jentry);   nbytes += nb;
 
-    Mgg.clear();
-    E1.clear();
-    E2.clear();
-    Mdihadron.clear();
-    beta1.clear();
-    beta2.clear();
-    flag.clear();
-
+    Mgg=0.0;
+    E1=0.0;
+    E2=0.0;
+    Mdihadron=0.0;
+    beta1=0.0;
+    beta2=0.0;
+    flag=0;
+    phi_h=0.0;
+    phi_R=0.0;
+    th = 0.0;
     for(unsigned int i = 0 ; i < pid->size() ; i++){
       // Identify the scattered electron
       if(pid->at(i)==11){
@@ -270,23 +305,26 @@ int PostProcess::pipi0_MC(TTree * _tree_postprocess){
 	            
 	      dihadron = pi0+pi;
 	      // All cuts are addressed, now appended interesting quantities
-	      Mgg.push_back((gamma1+gamma2).M());
-	      E1.push_back(gamma1.E());
-	      E2.push_back(gamma2.E());
-	      Mdihadron.push_back(dihadron.M());
-	      beta1.push_back(beta->at(i));
-	      beta2.push_back(beta->at(j));	            
+	      Mgg=((gamma1+gamma2).M());
+	      E1=(gamma1.E());
+	      E2=(gamma2.E());
+	      Mdihadron=(dihadron.M());
+	      beta1=(beta->at(i));
+	      beta2=(beta->at(j));	            
 	      if(parentID->at(i)==parentID->at(j) && parentPID->at(i)==111)
-		flag.push_back(1);
+		flag=(1);
 	      else
-		flag.push_back(-1);
+		flag=(-1);
+	      phi_R=(_kin.phi_R(q,init_electron,pi,pi0));
+	      phi_h=(_kin.phi_h(q,init_electron,pi,pi0));	      
+     	      th = (_kin.com_th(pi,pi0));
+	      _tree_postprocess->Fill();
+	      fid++;
 	    }
 	  }
 	}
       }
     }
-    if(E1.size()>0)
-      _tree_postprocess->Fill();
   }
   return 0;
 }

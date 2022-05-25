@@ -20,6 +20,7 @@ class Settings{
 
   bool doMC() const;
   bool doReco() const;
+  bool doFiducialCuts() const;
   bool doPostProcess() const;
   bool connectMC2Reco() const;
   bool ignoreOtherRecoParticles() const;
@@ -35,6 +36,7 @@ class Settings{
 
   void setdoMC(bool);
   void setdoReco(bool);
+  void setdoFiducialCuts(bool);
   void setdoPostProcess(bool);
   void setconnectMC2Reco(bool);
   void setignoreOtherRecoParticles(bool);
@@ -70,6 +72,7 @@ class Settings{
 
   bool _doMC = false;
   bool _doReco = false;
+  bool _doFiducialCuts = false;
   bool _doPostProcess = false;
   bool _connectMC2Reco = false;
   bool _ignoreOtherRecoParticles = false;

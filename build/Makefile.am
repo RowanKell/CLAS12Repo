@@ -30,7 +30,8 @@ pkginclude_HEADERS = \
   ../src/SIDISParticle.h \
   ../src/Constants.h \
   ../src/PostProcess.h \
-  ../src/SIDISParticlev1.h
+  ../src/SIDISParticlev1.h \
+  ../src/FiducialCuts.h	
 
 libclas12ana_la_SOURCES = \
   ../src/Kinematics.C \
@@ -38,7 +39,8 @@ libclas12ana_la_SOURCES = \
   ../src/SIDISKinematicsReco.C \
   ../src/SIDISParticle.C \
   ../src/PostProcess.C \
-  ../src/SIDISParticlev1.C
+  ../src/SIDISParticlev1.C \
+  ../src/FiducialCuts.C
 
 %_Dict.C: ../src/%.h ../src/%LinkDef.h
 	rootcint -f $@ @CINTDEFS@ -c $(AM_CPPFLAGS) $^

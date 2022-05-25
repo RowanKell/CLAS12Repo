@@ -10,8 +10,9 @@ R__LOAD_LIBRARY(libclas12ana.so)
 using namespace std;
 
 int pipi0_process(
-		  const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/clasdis/fall2018/torus-1/v1/bkg45nA_10604MeV/45nA_job_3301_3.hipo",
+		  //const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/clasdis/fall2018/torus-1/v1/bkg45nA_10604MeV/45nA_job_3301_3.hipo",
 		  //const char * hipoFile = "/w/hallb-scshelf2102/clas12/users/gmat/CLAS12Analysis/data/raw/sample/Out_DIS_pass1_915_920.hipo_skim23.hipo",
+		  const char * hipoFile = "/cache/clas12/rg-a/production/recon/fall2018/torus-1/pass1/v1/dst/train/nSidis/nSidis_005310.hipo",
 		  const char * outputFile = "/work/clas12/users/gmat/CLAS12Analysis/data/raw/test.root"
 		  )
 {
@@ -47,11 +48,12 @@ int pipi0_process(
   settings.addPIDforBetarange(22,0.9,1.1); // Beta range for photon
   settings.addPIDforChi2max(211,3);        // Pi+ must have abs(chi2pid) < 3 
 
-  settings.setdoMC(true);             // Analyze MC::Lund
+  settings.setdoMC(false);             // Analyze MC::Lund
   settings.setdoReco(true);           // Analyze REC::Particle
+  settings.setdoFiducialCuts(true);   // Perform fiducial cuts
   settings.setdoPostProcess(true);    // Apply further cuts
-  settings.setPostProcessMethod("pipluspi0_MC"); // Perform pipluspi0 default processing
-  settings.setconnectMC2Reco(true);   // Connect pindex of REC::Particle to pindex of MC::Lund
+  settings.setPostProcessMethod("pipluspi0"); // Perform pipluspi0 default processing
+  settings.setconnectMC2Reco(false);   // Connect pindex of REC::Particle to pindex of MC::Lund
   settings.setEventRecoMethod(Settings::eventRecoMethod::useLargestPinFD);
   settings.addHipoFile(hipoFile);
   //-----------------------------------

@@ -1,24 +1,21 @@
 #!/bin/bash
 
 workdir="/work/clas12/users/gmat/CLAS12Analysis"
-#hipodir=/cache/clas12/rg-a/production/montecarlo/clasdis/fall2018/torus-1/v1/bkg45nA_10604MeV/
-#hipodir=/work/clas12/rg-a/montecarlo/fall2018/torus-1/clasdis/nobg/
-#hipodir=/cache/clas12/rg-a/production/recon/fall2018/torus-1/pass1/v1/dst/train/nSidis/
-hipodir=/cache/clas12/rg-a/production/recon/fall2018/torus+1/pass1/v1/dst/train/nSidis/
-outputdir="/work/clas12/users/gmat/CLAS12Analysis/data/fall2018-torus+1-v1-nSidis"
-#outputdir="/work/clas12/users/gmat/CLAS12Analysis/data/fall2018-torus-1-nobg"
-rootname="may24_"
+#filedir=/work/clas12/users/gmat/CLAS12Analysis/data/fall2018-torus-1-nobg
+filedir=/work/clas12/users/gmat/CLAS12Analysis/data/fall2018-torus-1-v1-nSidis
+outputdir=${filedir}
+rootname="may23_"
 processdir="/work/clas12/users/gmat/CLAS12Analysis/macros/dihadron_process/"
-processcodename="pipi0_process.C"
+processcodename="pipi0_postprocess_only.C"
 
-runJobs="${workdir}/slurm/runJobs.sh"
+runJobs="${workdir}/slurm/runJobsPostProcessOnly.sh"
 touch $runJobs
 chmod +x $runJobs
 echo " " > $runJobs
 
 i=0
 
-for hipofile in "$hipodir"/*
+for rootfile in "$filedir"/may23_*
 do
     file="${workdir}/slurm/shells/${rootname}${i}.sh"
     touch $file
@@ -39,7 +36,7 @@ do
     echo "set CCDB_HOME=${CLAS12ROOT}/ccdb" >> $file
     echo "source ${CCDB_HOME}/environment.csh" >> $file
     echo "cd ${processdir}" >> $file    
-    echo "clas12root ${processcodename}\\(\\\"${hipofile}\\\",\\\"${outputdir}/${rootname}${i}.root\\\"\\)" >> $file   
+    echo "clas12root ${processcodename}\\(\\\"${rootfile}\\\"\\)" >> $file   
     echo "sbatch shells/${rootname}${i}.sh" >> $runJobs
     i=$((i+1))
 done

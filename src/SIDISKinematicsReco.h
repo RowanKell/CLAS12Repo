@@ -12,6 +12,7 @@
 #include "SIDISParticle.h"
 #include "SIDISParticlev1.h"
 #include "PostProcess.h"
+#include "FiducialCuts.h"
 /* ROOT includes */
 #include <TFile.h>
 #include <TTree.h>
@@ -68,6 +69,7 @@ class SIDISKinematicsReco{
   Settings _settings;
   Kinematics _kin;
   PostProcess _postprocess;
+  FiducialCuts _fiducial;
 
   int _idx_RECKin;
   int _ix;

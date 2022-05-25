@@ -63,3 +63,45 @@ double Kinematics::phi(double Px, double Py){
   return atan2(Py,Px);
 }
 
+double Kinematics::phi_h(TLorentzVector Q, TLorentzVector L, TLorentzVector p1, TLorentzVector p2){
+  TLorentzVector ph = p1 + p2;
+  TLorentzVector r = 0.5*(p1-p2);
+
+  TVector3 q(Q.Px(), Q.Py(), Q.Pz());
+  TVector3 l(L.Px(), L.Py(), L.Pz());
+  TVector3 Ph(ph.Px(), ph.Py(), ph.Pz());
+
+  TVector3 qcrossl = q.Cross(l);
+  TVector3 qcrossPh = q.Cross(Ph);
+
+  double factor1 = (qcrossl*Ph)/abs(qcrossl*Ph);
+double factor2 = (qcrossl*qcrossPh)/qcrossl.Mag()/qcrossPh.Mag();
+
+  return factor1*acos(factor2);
+}
+
+double Kinematics::phi_R(TLorentzVector Q, TLorentzVector L, TLorentzVector p1, TLorentzVector p2){
+  TLorentzVector ph = p1 + p2;
+  TLorentzVector r = 0.5*(p1-p2);
+
+  TVector3 q(Q.Px(), Q.Py(), Q.Pz());
+  TVector3 l(L.Px(), L.Py(), L.Pz());
+  TVector3 R(r.Px(), r.Py(), r.Pz());
+
+  TVector3 Rperp = R-(q*R)/(q*q)*q;
+  TVector3 qcrossl = q.Cross(l);
+  TVector3 qcrossRperp = q.Cross(Rperp);
+
+  double factor1 = (qcrossl*Rperp)/abs(qcrossl*Rperp);
+  double factor2 = (qcrossl*qcrossRperp)/qcrossl.Mag()/qcrossRperp.Mag();
+
+  return factor1*acos(factor2);
+}
+
+double Kinematics::com_th(TLorentzVector P1, TLorentzVector P2){
+  TLorentzVector Ptotal = P1+P2;
+  TVector3 comBOOST = Ptotal.BoostVector();
+  Ptotal.Boost(-comBOOST);
+  P1.Boost(-comBOOST);
+  return P1.Angle(comBOOST);
+}
