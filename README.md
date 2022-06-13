@@ -1,6 +1,7 @@
 # CLAS12Analysis
 ---
 Analysis tool for reading hipo4 files with clas12root
+Created by @Gregtom3 - Forked and adapted by @RowanKell
 # Setup Tutorial
 ---
 1. Ensure both **ROOTSYS** and **CLAS12ROOT** are environment variables (see https://github.com/JeffersonLab/clas12root for details on installing CLAS12ROOT). For ROOT, we need 6.24.06, which should automatically install with 'module load clas12/pro'
